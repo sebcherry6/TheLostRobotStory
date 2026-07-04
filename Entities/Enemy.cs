@@ -6,18 +6,54 @@ using TheLostRobotStory.Entities;
 
 namespace TheLostRobotStory.Entities
 {
+    public enum EnemyType
+    {
+        Normal,
+        Fast,
+        Tank,
+        Laser
+    }
+
     public class Enemy : Entity
     {
-        private float _speed = 2f;
+        public EnemyType Type;
+
+        private float _speed;
+        private float _shootTimer = 2f;
         private int _direction = 1;
 
         public int Health = 1;
         public bool IsDead => Health <= 0;
 
-        public Enemy(Vector2 startPos)
+        public Enemy(Vector2 startPos, EnemyType type)
         {
             position = startPos;
             size = new Vector2(32, 32);
+
+            Type = type;
+
+            switch (Type)
+            {
+                case EnemyType.Normal:
+                    _speed = 2f;
+                    Health = 1;
+                    break;
+
+                case EnemyType.Fast:
+                    _speed = 4f;
+                    Health = 1;
+                    break;
+
+                case EnemyType.Tank:
+                    _speed = 1.5f;
+                    Health = 3;
+                    break;
+
+                case EnemyType.Laser:
+                    _speed = 2.5f;
+                    Health = 2;
+                    break;
+            }
         }
 
         public void TakeDamage(int damage)
@@ -26,23 +62,26 @@ namespace TheLostRobotStory.Entities
         }
 
         // =========================
-        // MAIN UPDATE (CALLED FROM GAME1)
+        // SINGLE CLEAN UPDATE
         // =========================
-        public void Update(List<Rectangle> solids)
+        public virtual void Update(
+            List<Rectangle> solids,
+            Player player,
+            List<Projectile> projectiles)
         {
             if (IsDead)
                 return;
 
             // =========================
-            // HORIZONTAL MOVEMENT
+            // MOVEMENT
             // =========================
             position.X += _speed * _direction;
 
-            Rectangle enemyRect = Bounds;
+            Rectangle rect = Bounds;
 
             foreach (var tile in solids)
             {
-                if (enemyRect.Intersects(tile))
+                if (rect.Intersects(tile))
                 {
                     _direction *= -1;
                     position.X += _speed * _direction;
@@ -56,32 +95,68 @@ namespace TheLostRobotStory.Entities
             velocity.Y += 0.5f;
             position.Y += velocity.Y;
 
-            enemyRect = Bounds;
+            rect = Bounds;
 
             foreach (var tile in solids)
             {
-                if (enemyRect.Intersects(tile))
+                if (rect.Intersects(tile))
                 {
                     position.Y = tile.Top - size.Y;
                     velocity.Y = 0;
                     break;
                 }
             }
+
+            // =========================
+            // LASER ATTACK
+            // =========================
+            if (Type == EnemyType.Laser)
+            {
+                _shootTimer -= 1f / 60f;
+
+                if (_shootTimer <= 0f)
+                {
+                    _shootTimer = 2f;
+
+                    Vector2 dir = player.position - position;
+
+                    if (dir != Vector2.Zero)
+                        dir.Normalize();
+
+                    projectiles.Add(
+                        new Projectile(position + new Vector2(16, 16), dir)
+                    );
+                }
+            }
         }
 
         // =========================
-        // DRAW (NO OVERRIDE ISSUES)
+        // DRAW
         // =========================
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (IsDead)
                 return;
 
-            spriteBatch.Draw(
-                TextureManager.Pixel,
-                Bounds,
-                Color.Red
-            );
+            Color color = Color.Red;
+
+            switch (Type)
+            {
+                case EnemyType.Fast:
+                    color = Color.Orange;
+                    break;
+
+                case EnemyType.Tank:
+                    color = Color.DarkRed;
+                    break;
+
+                case EnemyType.Laser:
+                    color = Color.Purple;
+                    break;
+            }
+
+            spriteBatch.Draw(TextureManager.Pixel, Bounds, color);
         }
+
     }
 }

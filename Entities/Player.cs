@@ -2,39 +2,39 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
-using TheLostRobotStory.Entities;
 using TheLostRobotStory.Core;
 
 namespace TheLostRobotStory.Entities
 {
     public class Player : Entity
     {
+        public int EvolutionStage = 0;
+
+        public int Health = 3;
+        public Vector2 SpawnPoint;
+
+        public int FacingDirection = 1;
+
+        // movement
         private float _speed = 4f;
         private float _gravity = 0.5f;
         private float _jumpForce = -10f;
 
+        private bool _isGrounded;
+        private bool _doubleJumpUsed;
+
+        // input
         private KeyboardState _keyboard;
         private KeyboardState _previousKeyboard;
 
-        public int Health = 3;
-
-        // =========================
-        // SPAWN SYSTEM
-        // =========================
-        public Vector2 SpawnPoint;
-
-        // =========================
-        // INVINCIBILITY FRAMES
-        // =========================
-        private float _invincibleTimer = 0f;
-        private float _invincibleDuration = 1f;
-
-        // =========================
-        // COMBAT
-        // =========================
+        // attack
         public bool IsAttacking;
         private float _attackTimer;
         private float _attackCooldown = 0.25f;
+
+        // invincibility
+        private float _invincibleTimer;
+        private float _invincibleDuration = 1f;
 
         public Player(Vector2 startPos)
         {
@@ -43,34 +43,46 @@ namespace TheLostRobotStory.Entities
             size = new Vector2(32, 32);
         }
 
-        public override void Update(GameTime gameTime)
+        public void Update(GameTime gameTime, List<Projectile> projectiles)
         {
-            _keyboard = Keyboard.GetState();
-
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            // =========================
-            // INVINCIBILITY TIMER
-            // =========================
-            if (_invincibleTimer > 0)
-                _invincibleTimer -= dt;
+            _keyboard = Keyboard.GetState();
+
+            if (EvolutionStage >= 1)
+                _speed = 5.5f;
 
             // =========================
-            // MOVEMENT
+            // HORIZONTAL MOVEMENT
             // =========================
             if (_keyboard.IsKeyDown(Keys.A))
+            {
                 position.X -= _speed;
+                FacingDirection = -1;
+            }
 
             if (_keyboard.IsKeyDown(Keys.D))
+            {
                 position.X += _speed;
+                FacingDirection = 1;
+            }
 
             // =========================
-            // JUMP
+            // JUMP (FIXED ORDER)
             // =========================
             if (_keyboard.IsKeyDown(Keys.Space) &&
                 _previousKeyboard.IsKeyUp(Keys.Space))
             {
-                velocity.Y = _jumpForce;
+                if (_isGrounded)
+                {
+                    velocity.Y = _jumpForce;
+                    _doubleJumpUsed = false;
+                }
+                else if (EvolutionStage >= 1 && !_doubleJumpUsed)
+                {
+                    velocity.Y = _jumpForce;
+                    _doubleJumpUsed = true;
+                }
             }
 
             // =========================
@@ -80,90 +92,115 @@ namespace TheLostRobotStory.Entities
             position.Y += velocity.Y;
 
             // =========================
-            // ATTACK SYSTEM
+            // SHOOT (K) FIXED
+            // =========================
+            if (EvolutionStage >= 1 &&
+                _keyboard.IsKeyDown(Keys.K) &&
+                _previousKeyboard.IsKeyUp(Keys.K))
+            {
+                projectiles.Add(new Projectile(
+                    position + new Vector2(size.X / 2, size.Y / 2),
+                    new Vector2(FacingDirection, 0),
+                    true
+                ));
+            }
+
+            // =========================
+            // ATTACK TIMER
             // =========================
             if (_attackTimer > 0)
             {
                 _attackTimer -= dt;
+                IsAttacking = true;
             }
             else
             {
                 IsAttacking = false;
             }
 
-            if (_keyboard.IsKeyDown(Keys.J) &&
-                _attackTimer <= 0)
-            {
-                IsAttacking = true;
+            if (_keyboard.IsKeyDown(Keys.J) && _attackTimer <= 0)
                 _attackTimer = _attackCooldown;
-            }
+
+            // invincibility
+            if (_invincibleTimer > 0)
+                _invincibleTimer -= dt;
 
             _previousKeyboard = _keyboard;
         }
 
         // =========================
-        // ATTACK HITBOX
-        // =========================
-        public Rectangle AttackHitbox
-        {
-            get
-            {
-                if (!IsAttacking)
-                    return Rectangle.Empty;
-
-                return new Rectangle(
-                    (int)(position.X + size.X),
-                    (int)position.Y,
-                    (int)size.X,
-                    (int)size.Y
-                );
-            }
-        }
-
-        // =========================
-        // WORLD COLLISION
+        // COLLISION (THIS FIXES JUMP)
         // =========================
         public void ApplyCollision(List<Rectangle> solids)
         {
-            Rectangle playerRect = Bounds;
+            _isGrounded = false;
+
+            Rectangle box = Bounds;
 
             foreach (var tile in solids)
             {
-                if (playerRect.Intersects(tile))
+                if (box.Intersects(tile))
                 {
-                    if (velocity.Y > 0)
+                    Rectangle overlap = Rectangle.Intersect(box, tile);
+
+                    if (overlap.Height < overlap.Width)
                     {
-                        position.Y = tile.Top - size.Y;
-                        velocity.Y = 0;
+                        if (position.Y < tile.Y)
+                        {
+                            position.Y = tile.Top - size.Y;
+                            velocity.Y = 0;
+                            _isGrounded = true;
+                            _doubleJumpUsed = false;
+                        }
+                        else
+                        {
+                            position.Y = tile.Bottom;
+                            velocity.Y = 0;
+                        }
+
+                        box = Bounds;
+                    }
+                    else
+                    {
+                        if (position.X < tile.X)
+                            position.X = tile.X - size.X;
+                        else
+                            position.X = tile.Right;
+
+                        box = Bounds;
                     }
                 }
             }
         }
 
-        // =========================
-        // ENEMY COLLISION (FIXED)
-        // =========================
+        public Rectangle AttackHitbox =>
+            IsAttacking
+                ? new Rectangle(
+                    (int)(position.X + (FacingDirection == 1 ? size.X : -20)),
+                    (int)position.Y,
+                    (int)size.X,
+                    (int)size.Y)
+                : Rectangle.Empty;
+
         public void CheckEnemyCollision(List<Enemy> enemies)
         {
             if (_invincibleTimer > 0)
                 return;
 
-            Rectangle playerRect = Bounds;
-
             foreach (var enemy in enemies)
             {
-                if (playerRect.Intersects(enemy.Bounds))
+                if (Bounds.Intersects(enemy.Bounds))
                 {
                     Health--;
                     _invincibleTimer = _invincibleDuration;
+
+                    position.X += FacingDirection * -10;
+                    position.Y -= 5;
                     break;
                 }
             }
         }
 
-        // =========================
-        // DEATH / RESPAWN (FIXED)
-        // =========================
         public void CheckDeath()
         {
             if (Health <= 0)
@@ -171,29 +208,19 @@ namespace TheLostRobotStory.Entities
                 position = SpawnPoint;
                 velocity = Vector2.Zero;
                 Health = 3;
-
-                _invincibleTimer = 1f; // prevents instant re-hit on spawn
+                _doubleJumpUsed = false;
+                _invincibleTimer = 1f;
             }
         }
 
-        // =========================
-        // DRAW
-        // =========================
         public override void Draw(SpriteBatch spriteBatch)
         {
-            Color color = Color.White;
+            Color c = Color.White;
 
-            if (IsAttacking)
-                color = Color.LightYellow;
+            if (IsAttacking) c = Color.Orange;
+            if (_invincibleTimer > 0) c = Color.LightBlue;
 
-            if (_invincibleTimer > 0)
-                color = Color.LightBlue; // visual feedback for damage
-
-            spriteBatch.Draw(
-                TextureManager.Pixel,
-                Bounds,
-                color
-            );
+            spriteBatch.Draw(TextureManager.Pixel, Bounds, c);
         }
     }
 }

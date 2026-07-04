@@ -6,11 +6,14 @@ public class Door
 {
     public Rectangle Bounds;
     public string DestinationLevel;
-    public float GlowTimer;
+
+    public bool CanOpen;
+    public bool IsActive = true;
+
     public bool IsPlayerNear;
 
-    public bool IsActive = true;
-    private float _cooldownTimer = 0f;
+    private float _glowTimer;
+    private float _cooldownTimer;
 
     public Door(Vector2 position, string destinationLevel)
     {
@@ -18,19 +21,23 @@ public class Door
         DestinationLevel = destinationLevel;
     }
 
+    // =========================
+    // UPDATE
+    // =========================
     public void Update(GameTime gameTime)
     {
+        float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        // glow animation
         if (IsPlayerNear)
-        {
-            GlowTimer += (float)gameTime.ElapsedGameTime.TotalSeconds * 6f;
-        }
+            _glowTimer += dt * 6f;
         else
-        {
-            GlowTimer = 0f;
-        }
+            _glowTimer = 0f;
+
+        // cooldown after use
         if (!IsActive)
         {
-            _cooldownTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            _cooldownTimer += dt;
 
             if (_cooldownTimer >= 1f)
             {
@@ -40,25 +47,34 @@ public class Door
         }
     }
 
-    public void Trigger()
+    // =========================
+    // CALL THIS FROM GAME1
+    // =========================
+    public void TryOpen()
     {
+        if (!IsActive || !CanOpen)
+            return;
+
         IsActive = false;
     }
 
+    // =========================
+    // DRAW (GLOW EFFECT)
+    // =========================
     public void Draw(SpriteBatch spriteBatch)
     {
         float glow = 1f;
 
         if (IsPlayerNear)
         {
-            glow = 0.5f + (float)System.Math.Sin(GlowTimer) * 0.5f;
+            glow = 0.6f + (float)System.Math.Sin(_glowTimer) * 0.4f;
         }
 
         Color color = Color.Purple * glow;
 
-        spriteBatch.Draw(
-            TextureManager.Pixel,
-            Bounds,
-            color);
+        if (!CanOpen)
+            color = Color.DarkSlateBlue; // locked door look
+
+        spriteBatch.Draw(TextureManager.Pixel, Bounds, color);
     }
 }
