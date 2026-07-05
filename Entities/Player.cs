@@ -18,7 +18,7 @@ namespace TheLostRobotStory.Entities
         // movement
         private float _speed = 4f;
         private float _gravity = 0.5f;
-        private float _jumpForce = -10f;
+        private float _jumpForce = -15f;
 
         private bool _isGrounded;
         private bool _doubleJumpUsed;
