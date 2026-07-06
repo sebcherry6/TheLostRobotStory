@@ -9,30 +9,22 @@ namespace TheLostRobotStory.Entities
     public class Player : Entity
     {
         public int EvolutionStage = 0;
-
         public int Health = 3;
         public Vector2 SpawnPoint;
-
         public int FacingDirection = 1;
 
-        // movement
         private float _speed = 4f;
         private float _gravity = 0.5f;
-        private float _jumpForce = -15f;
+        private float _jumpForce = -30f;
 
         private bool _isGrounded;
+        private bool _jumpQueued;
         private bool _doubleJumpUsed;
 
-        // input
-        private KeyboardState _keyboard;
-        private KeyboardState _previousKeyboard;
-
-        // attack
         public bool IsAttacking;
         private float _attackTimer;
         private float _attackCooldown = 0.25f;
 
-        // invincibility
         private float _invincibleTimer;
         private float _invincibleDuration = 1f;
 
@@ -43,60 +35,54 @@ namespace TheLostRobotStory.Entities
             size = new Vector2(32, 32);
         }
 
-        public void Update(GameTime gameTime, List<Projectile> projectiles)
+        // =========================
+        // UPDATE INPUT
+        // =========================
+        public void Update(GameTime gameTime, KeyboardState keyboard, KeyboardState previousKeyboard, List<Projectile> projectiles)
         {
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            _keyboard = Keyboard.GetState();
 
             if (EvolutionStage >= 1)
                 _speed = 5.5f;
 
             // =========================
-            // HORIZONTAL MOVEMENT
+            // HORIZONTAL
             // =========================
-            if (_keyboard.IsKeyDown(Keys.A))
+            if (keyboard.IsKeyDown(Keys.A))
             {
                 position.X -= _speed;
                 FacingDirection = -1;
             }
 
-            if (_keyboard.IsKeyDown(Keys.D))
+            if (keyboard.IsKeyDown(Keys.D))
             {
                 position.X += _speed;
                 FacingDirection = 1;
             }
 
             // =========================
-            // JUMP (FIXED ORDER)
+            // QUEUE JUMP (FIX)
             // =========================
-            if (_keyboard.IsKeyDown(Keys.Space) &&
-                _previousKeyboard.IsKeyUp(Keys.Space))
+            if (keyboard.IsKeyDown(Keys.Space) &&
+                previousKeyboard.IsKeyUp(Keys.Space))
             {
-                if (_isGrounded)
-                {
-                    velocity.Y = _jumpForce;
-                    _doubleJumpUsed = false;
-                }
-                else if (EvolutionStage >= 1 && !_doubleJumpUsed)
-                {
-                    velocity.Y = _jumpForce;
-                    _doubleJumpUsed = true;
-                }
+                _jumpQueued = true;
             }
 
             // =========================
             // GRAVITY
             // =========================
             velocity.Y += _gravity;
-            position.Y += velocity.Y;
+
+            // APPLY MOVEMENT
+            position += velocity;
 
             // =========================
-            // SHOOT (K) FIXED
+            // SHOOT (K FIXED)
             // =========================
             if (EvolutionStage >= 1 &&
-                _keyboard.IsKeyDown(Keys.K) &&
-                _previousKeyboard.IsKeyUp(Keys.K))
+                keyboard.IsKeyDown(Keys.K) &&
+                previousKeyboard.IsKeyUp(Keys.K))
             {
                 projectiles.Add(new Projectile(
                     position + new Vector2(size.X / 2, size.Y / 2),
@@ -118,18 +104,18 @@ namespace TheLostRobotStory.Entities
                 IsAttacking = false;
             }
 
-            if (_keyboard.IsKeyDown(Keys.J) && _attackTimer <= 0)
+            if (keyboard.IsKeyDown(Keys.J) && _attackTimer <= 0)
                 _attackTimer = _attackCooldown;
 
-            // invincibility
+            // =========================
+            // INVINCIBILITY
+            // =========================
             if (_invincibleTimer > 0)
                 _invincibleTimer -= dt;
-
-            _previousKeyboard = _keyboard;
         }
 
         // =========================
-        // COLLISION (THIS FIXES JUMP)
+        // COLLISION (NOW FIXES JUMP)
         // =========================
         public void ApplyCollision(List<Rectangle> solids)
         {
@@ -151,6 +137,15 @@ namespace TheLostRobotStory.Entities
                             velocity.Y = 0;
                             _isGrounded = true;
                             _doubleJumpUsed = false;
+
+                            // =========================
+                            // EXECUTE QUEUED JUMP HERE
+                            // =========================
+                            if (_jumpQueued)
+                            {
+                                velocity.Y = _jumpForce;
+                                _jumpQueued = false;
+                            }
                         }
                         else
                         {
@@ -173,6 +168,9 @@ namespace TheLostRobotStory.Entities
             }
         }
 
+        // =========================
+        // ATTACK HITBOX
+        // =========================
         public Rectangle AttackHitbox =>
             IsAttacking
                 ? new Rectangle(
@@ -208,6 +206,7 @@ namespace TheLostRobotStory.Entities
                 position = SpawnPoint;
                 velocity = Vector2.Zero;
                 Health = 3;
+
                 _doubleJumpUsed = false;
                 _invincibleTimer = 1f;
             }
@@ -217,8 +216,11 @@ namespace TheLostRobotStory.Entities
         {
             Color c = Color.White;
 
-            if (IsAttacking) c = Color.Orange;
-            if (_invincibleTimer > 0) c = Color.LightBlue;
+            if (IsAttacking)
+                c = Color.Orange;
+
+            if (_invincibleTimer > 0)
+                c = Color.LightBlue;
 
             spriteBatch.Draw(TextureManager.Pixel, Bounds, c);
         }

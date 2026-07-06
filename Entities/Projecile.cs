@@ -7,39 +7,43 @@ namespace TheLostRobotStory.Entities
 {
     public class Projectile
     {
-        public Vector2 position;
-        public Vector2 velocity;
-
-        public Rectangle Bounds =>
-            new Rectangle((int)position.X, (int)position.Y, 8, 8);
+        public Vector2 Position;
+        public Vector2 Velocity;
 
         public bool IsDead;
 
-        private float _speed = 8f;
-        private int _damage = 1;
-
-        // OPTIONAL: for enemy/player differentiation later
         public bool FromPlayer;
+
+        private const float Speed = 10f;
+        private const int Size = 8;
+        private const int Damage = 1;
+
+        public Rectangle Bounds =>
+            new Rectangle(
+                (int)Position.X,
+                (int)Position.Y,
+                Size,
+                Size);
 
         public Projectile(Vector2 startPosition, Vector2 direction, bool fromPlayer = true)
         {
-            position = startPosition;
-            velocity = Vector2.Normalize(direction) * _speed;
+            Position = startPosition;
+
+            if (direction != Vector2.Zero)
+                direction.Normalize();
+
+            Velocity = direction * Speed;
+
             FromPlayer = fromPlayer;
         }
 
         public void Update(List<Rectangle> solids)
         {
-            position += velocity;
+            Position += Velocity;
 
-            // =========================
-            // TILE COLLISION
-            // =========================
-            Rectangle box = Bounds;
-
-            foreach (var tile in solids)
+            foreach (Rectangle tile in solids)
             {
-                if (box.Intersects(tile))
+                if (Bounds.Intersects(tile))
                 {
                     IsDead = true;
                     return;
@@ -47,34 +51,37 @@ namespace TheLostRobotStory.Entities
             }
         }
 
-        // =========================
-        // ENEMY HIT CHECK (PLAYER PROJECTILE)
-        // =========================
-        public bool HitsEnemy(Enemy enemy)
+        public bool HitEnemy(Enemy enemy)
         {
-            if (FromPlayer && Bounds.Intersects(enemy.Bounds))
-            {
-                enemy.TakeDamage(_damage);
-                IsDead = true;
-                return true;
-            }
+            if (!FromPlayer)
+                return false;
 
-            return false;
+            if (enemy.IsDead)
+                return false;
+
+            if (!Bounds.Intersects(enemy.Bounds))
+                return false;
+
+            enemy.TakeDamage(Damage);
+
+            IsDead = true;
+
+            return true;
         }
 
-        // =========================
-        // PLAYER HIT CHECK (ENEMY PROJECTILE)
-        // =========================
-        public bool HitsPlayer(Player player)
+        public bool HitPlayer(Player player)
         {
-            if (!FromPlayer && Bounds.Intersects(player.Bounds))
-            {
-                player.Health--;
-                IsDead = true;
-                return true;
-            }
+            if (FromPlayer)
+                return false;
 
-            return false;
+            if (!Bounds.Intersects(player.Bounds))
+                return false;
+
+            player.Health--;
+
+            IsDead = true;
+
+            return true;
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -82,8 +89,7 @@ namespace TheLostRobotStory.Entities
             spriteBatch.Draw(
                 TextureManager.Pixel,
                 Bounds,
-                FromPlayer ? Color.Yellow : Color.Red
-            );
+                FromPlayer ? Color.Yellow : Color.Red);
         }
     }
 }

@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using TheLostRobotStory.Core;
-using TheLostRobotStory.Entities;
 
 namespace TheLostRobotStory.Entities
 {
@@ -18,12 +17,13 @@ namespace TheLostRobotStory.Entities
     {
         public EnemyType Type;
 
-        private float _speed;
-        private float _shootTimer = 2f;
-        private int _direction = 1;
-
         public int Health = 1;
         public bool IsDead => Health <= 0;
+
+        private float _speed;
+        private int _direction = 1;
+
+        private float _shootTimer = 2f;
 
         public Enemy(Vector2 startPos, EnemyType type)
         {
@@ -61,29 +61,24 @@ namespace TheLostRobotStory.Entities
             Health -= damage;
         }
 
-        // =========================
-        // SINGLE CLEAN UPDATE
-        // =========================
-        public virtual void Update(
-            List<Rectangle> solids,
-            Player player,
-            List<Projectile> projectiles)
+        public void Update(List<Rectangle> solids, Player player, List<Projectile> projectiles)
         {
             if (IsDead)
                 return;
 
             // =========================
-            // MOVEMENT
+            // HORIZONTAL MOVEMENT
             // =========================
             position.X += _speed * _direction;
 
-            Rectangle rect = Bounds;
+            Rectangle box = Bounds;
 
             foreach (var tile in solids)
             {
-                if (rect.Intersects(tile))
+                if (box.Intersects(tile))
                 {
                     _direction *= -1;
+
                     position.X += _speed * _direction;
                     break;
                 }
@@ -95,26 +90,34 @@ namespace TheLostRobotStory.Entities
             velocity.Y += 0.5f;
             position.Y += velocity.Y;
 
-            rect = Bounds;
+            box = Bounds;
 
             foreach (var tile in solids)
             {
-                if (rect.Intersects(tile))
+                if (box.Intersects(tile))
                 {
-                    position.Y = tile.Top - size.Y;
+                    if (velocity.Y > 0)
+                    {
+                        position.Y = tile.Top - size.Y;
+                    }
+                    else
+                    {
+                        position.Y = tile.Bottom;
+                    }
+
                     velocity.Y = 0;
                     break;
                 }
             }
 
             // =========================
-            // LASER ATTACK
+            // LASER SHOOTING
             // =========================
             if (Type == EnemyType.Laser)
             {
                 _shootTimer -= 1f / 60f;
 
-                if (_shootTimer <= 0f)
+                if (_shootTimer <= 0)
                 {
                     _shootTimer = 2f;
 
@@ -123,16 +126,15 @@ namespace TheLostRobotStory.Entities
                     if (dir != Vector2.Zero)
                         dir.Normalize();
 
-                    projectiles.Add(
-                        new Projectile(position + new Vector2(16, 16), dir)
-                    );
+                    projectiles.Add(new Projectile(
+                        position + new Vector2(size.X / 2, size.Y / 2),
+                        dir,
+                        false // IMPORTANT: enemy projectile
+                    ));
                 }
             }
         }
 
-        // =========================
-        // DRAW
-        // =========================
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (IsDead)
@@ -157,6 +159,5 @@ namespace TheLostRobotStory.Entities
 
             spriteBatch.Draw(TextureManager.Pixel, Bounds, color);
         }
-
     }
 }
