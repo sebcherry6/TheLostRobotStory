@@ -11,6 +11,7 @@ namespace TheLostRobotStory.World
     public class LevelManager
     {
         public Level CurrentLevel { get; private set; }
+        public int TargetEvolutionStage;
 
         public LevelManager()
         {

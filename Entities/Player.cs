@@ -8,95 +8,168 @@ namespace TheLostRobotStory.Entities
 {
     public class Player : Entity
     {
+        // =========================
+        // EVOLUTION
+        // =========================
         public int EvolutionStage = 0;
+
+
+        // =========================
+        // HEALTH
+        // =========================
         public int Health = 3;
+
+
         public Vector2 SpawnPoint;
+
         public int FacingDirection = 1;
 
-        private float _speed = 4f;
-        private float _gravity = 0.5f;
-        private float _jumpForce = -15f;
 
-        private bool _isGrounded;
-        private bool _jumpQueued;
+        // =========================
+        // MOVEMENT
+        // =========================
+        private float _speed = 220f;
+        private float _gravity = 900f;
+        private float _jumpForce = -650f;
+
+        private bool _grounded;
+
         private bool _doubleJumpUsed;
 
-        public bool IsAttacking;
-        private float _attackTimer;
-        private float _attackCooldown = 0.25f;
 
+
+        // =========================
+        // ATTACK
+        // =========================
+        public bool IsAttacking;
+
+        private float _attackTimer;
+
+        private float _attackCooldown = 0.35f;
+
+
+
+        // =========================
+        // DAMAGE
+        // =========================
         private float _invincibleTimer;
+
         private float _invincibleDuration = 1f;
+
+
 
         public Player(Vector2 startPos)
         {
             position = startPos;
+
             SpawnPoint = startPos;
+
             size = new Vector2(32, 32);
         }
 
-        // =========================
-        // UPDATE INPUT
-        // =========================
-        public void Update(GameTime gameTime, KeyboardState keyboard, KeyboardState previousKeyboard, List<Projectile> projectiles)
+
+
+        // =========================================================
+        // UPDATE
+        // =========================================================
+        public void Update(
+            GameTime gameTime,
+            KeyboardState keyboard,
+            KeyboardState previousKeyboard,
+            List<Projectile> projectiles)
         {
-            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            if (EvolutionStage >= 1)
-                _speed = 5.5f;
+            float dt =
+                (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+
+
+            float moveSpeed = GetSpeed();
+
+
 
             // =========================
-            // HORIZONTAL
+            // MOVE
             // =========================
+
             if (keyboard.IsKeyDown(Keys.A))
             {
-                position.X -= _speed;
+                velocity.X = -moveSpeed;
                 FacingDirection = -1;
             }
-
-            if (keyboard.IsKeyDown(Keys.D))
+            else if (keyboard.IsKeyDown(Keys.D))
             {
-                position.X += _speed;
+                velocity.X = moveSpeed;
                 FacingDirection = 1;
             }
+            else
+            {
+                velocity.X = 0;
+            }
+
+
 
             // =========================
-            // QUEUE JUMP (FIX)
+            // JUMP
             // =========================
-            if (keyboard.IsKeyDown(Keys.Space) &&
+
+            if (keyboard.IsKeyDown(Keys.Space)
+                &&
                 previousKeyboard.IsKeyUp(Keys.Space))
             {
-                _jumpQueued = true;
+
+                if (_grounded)
+                {
+                    velocity.Y = _jumpForce;
+                    _grounded = false;
+                }
+
+                else if (EvolutionStage >= 2 &&
+                        !_doubleJumpUsed)
+                {
+                    velocity.Y = _jumpForce;
+                    _doubleJumpUsed = true;
+                }
             }
+
+
 
             // =========================
             // GRAVITY
             // =========================
-            velocity.Y += _gravity;
 
-            // APPLY MOVEMENT
-            position += velocity;
+            velocity.Y += _gravity * dt;
+
+
+            position.X += velocity.X * dt;
+
+            position.Y += velocity.Y * dt;
+
+
 
             // =========================
-            // SHOOT (K FIXED)
+            // SHOOTING
             // =========================
+
             if (EvolutionStage >= 1 &&
-                keyboard.IsKeyDown(Keys.K) &&
-                previousKeyboard.IsKeyUp(Keys.K))
+               keyboard.IsKeyDown(Keys.K) &&
+               previousKeyboard.IsKeyUp(Keys.K))
             {
-                projectiles.Add(new Projectile(
-                    position + new Vector2(size.X / 2, size.Y / 2),
-                    new Vector2(FacingDirection, 0),
-                    true
-                ));
+
+                Shoot(projectiles);
+
             }
 
+
+
             // =========================
-            // ATTACK TIMER
+            // MELEE ATTACK
             // =========================
+
             if (_attackTimer > 0)
             {
                 _attackTimer -= dt;
+
                 IsAttacking = true;
             }
             else
@@ -104,125 +177,329 @@ namespace TheLostRobotStory.Entities
                 IsAttacking = false;
             }
 
-            if (keyboard.IsKeyDown(Keys.J) && _attackTimer <= 0)
+
+            if (keyboard.IsKeyDown(Keys.J)
+               &&
+               _attackTimer <= 0)
+            {
                 _attackTimer = _attackCooldown;
+            }
+
+
 
             // =========================
-            // INVINCIBILITY
+            // DAMAGE TIMER
             // =========================
+
             if (_invincibleTimer > 0)
                 _invincibleTimer -= dt;
         }
 
-        // =========================
-        // COLLISION (NOW FIXES JUMP)
-        // =========================
+
+
+        // =========================================================
+        // SHOOTING
+        // =========================================================
+
+        private void Shoot(List<Projectile> projectiles)
+        {
+
+            Vector2 spawn =
+                position +
+                new Vector2(size.X / 2, size.Y / 2);
+
+
+
+            if (EvolutionStage == 1)
+            {
+                projectiles.Add(
+                    new Projectile(
+                    spawn,
+                    new Vector2(FacingDirection, 0),
+                    true));
+            }
+
+
+            else if (EvolutionStage >= 2)
+            {
+
+                projectiles.Add(
+                    new Projectile(
+                    spawn,
+                    new Vector2(FacingDirection, 0),
+                    true));
+
+
+                projectiles.Add(
+                    new Projectile(
+                    spawn,
+                    new Vector2(
+                        FacingDirection,
+                        -0.3f),
+                    true));
+
+
+                projectiles.Add(
+                    new Projectile(
+                    spawn,
+                    new Vector2(
+                        FacingDirection,
+                        0.3f),
+                    true));
+            }
+
+        }
+
+
+
+
+        // =========================================================
+        // COLLISION
+        // =========================================================
+
         public void ApplyCollision(List<Rectangle> solids)
         {
-            _isGrounded = false;
+
+            _grounded = false;
+
 
             Rectangle box = Bounds;
 
-            foreach (var tile in solids)
+
+
+            foreach (Rectangle tile in solids)
             {
-                if (box.Intersects(tile))
+
+                if (!box.Intersects(tile))
+                    continue;
+
+
+
+                Rectangle overlap =
+                    Rectangle.Intersect(box, tile);
+
+
+
+                // vertical
+                if (overlap.Height < overlap.Width)
                 {
-                    Rectangle overlap = Rectangle.Intersect(box, tile);
 
-                    if (overlap.Height < overlap.Width)
+                    if (position.Y < tile.Y)
                     {
-                        if (position.Y < tile.Y)
-                        {
-                            position.Y = tile.Top - size.Y;
-                            velocity.Y = 0;
-                            _isGrounded = true;
-                            _doubleJumpUsed = false;
 
-                            // =========================
-                            // EXECUTE QUEUED JUMP HERE
-                            // =========================
-                            if (_jumpQueued)
-                            {
-                                velocity.Y = _jumpForce;
-                                _jumpQueued = false;
-                            }
-                        }
-                        else
-                        {
-                            position.Y = tile.Bottom;
-                            velocity.Y = 0;
-                        }
+                        position.Y =
+                            tile.Top - size.Y;
 
-                        box = Bounds;
+
+                        velocity.Y = 0;
+
+
+                        _grounded = true;
+
+                        _doubleJumpUsed = false;
                     }
                     else
                     {
-                        if (position.X < tile.X)
-                            position.X = tile.X - size.X;
-                        else
-                            position.X = tile.Right;
+                        position.Y =
+                            tile.Bottom;
 
-                        box = Bounds;
+                        velocity.Y = 0;
                     }
+
                 }
+
+
+                // horizontal
+                else
+                {
+
+                    if (position.X < tile.X)
+                        position.X =
+                            tile.Left - size.X;
+
+                    else
+                        position.X =
+                            tile.Right;
+
+                }
+
+
+                box = Bounds;
+            }
+
+        }
+
+
+
+
+        // =========================================================
+        // EVOLUTION
+        // =========================================================
+
+        public void Evolve(int stage)
+        {
+
+            if (stage > EvolutionStage)
+            {
+                EvolutionStage = stage;
+            }
+
+        }
+
+
+
+
+        private float GetSpeed()
+        {
+
+            switch (EvolutionStage)
+            {
+
+                case 1:
+                    return 260f;
+
+                case 2:
+                    return 300f;
+
+                case 3:
+                    return 340f;
+
+
+                default:
+                    return 220f;
+            }
+
+        }
+
+
+
+
+
+        // =========================================================
+        // ATTACK HITBOX
+        // =========================================================
+
+        public Rectangle AttackHitbox
+        {
+            get
+            {
+                if (!IsAttacking)
+                    return Rectangle.Empty;
+
+
+                return new Rectangle(
+
+                    FacingDirection == 1
+                    ? Bounds.Right
+                    : Bounds.Left - 30,
+
+                    Bounds.Y,
+
+                    30,
+
+                    Bounds.Height
+                );
             }
         }
 
-        // =========================
-        // ATTACK HITBOX
-        // =========================
-        public Rectangle AttackHitbox =>
-            IsAttacking
-                ? new Rectangle(
-                    (int)(position.X + (FacingDirection == 1 ? size.X : -20)),
-                    (int)position.Y,
-                    (int)size.X,
-                    (int)size.Y)
-                : Rectangle.Empty;
+
+
+
+        // =========================================================
+        // DAMAGE
+        // =========================================================
 
         public void CheckEnemyCollision(List<Enemy> enemies)
         {
+
             if (_invincibleTimer > 0)
                 return;
 
+
+
             foreach (var enemy in enemies)
             {
+
                 if (Bounds.Intersects(enemy.Bounds))
                 {
-                    Health--;
-                    _invincibleTimer = _invincibleDuration;
 
-                    position.X += FacingDirection * -10;
-                    position.Y -= 5;
+                    Health--;
+
+                    _invincibleTimer =
+                        _invincibleDuration;
+
+
+                    velocity.Y = -200;
+
+
                     break;
                 }
+
             }
+
         }
+
+
+
 
         public void CheckDeath()
         {
+
             if (Health <= 0)
             {
+
                 position = SpawnPoint;
+
                 velocity = Vector2.Zero;
+
+
                 Health = 3;
 
-                _doubleJumpUsed = false;
-                _invincibleTimer = 1f;
+                EvolutionStage = 0;
+
             }
+
         }
+
+
+
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            Color c = Color.White;
+
+            Color color =
+                Color.White;
+
+
+
+            if (EvolutionStage == 1)
+                color = Color.LightGreen;
+
+
+            if (EvolutionStage == 2)
+                color = Color.Cyan;
+
+
+            if (EvolutionStage >= 3)
+                color = Color.Gold;
+
+
 
             if (IsAttacking)
-                c = Color.Orange;
+                color = Color.Orange;
+
+
 
             if (_invincibleTimer > 0)
-                c = Color.LightBlue;
+                color = Color.LightBlue;
 
-            spriteBatch.Draw(TextureManager.Pixel, Bounds, c);
+
+
+            spriteBatch.Draw(
+                TextureManager.Pixel,
+                Bounds,
+                color);
+
         }
     }
 }
