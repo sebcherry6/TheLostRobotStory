@@ -9,14 +9,22 @@ namespace TheLostRobotStory.Entities
     public class Boss : Enemy
     {
 
-        public int MaxHealth = 30;
+        public int MaxHealth = 20;
 
+        public bool Activated { get; private set; }
 
-        public bool IsDead => Health <= 0;
 
 
         // =========================
-        // FLYING MOVEMENT
+        // AGGRO
+        // =========================
+
+        private float _aggroRange = 500f;
+
+
+
+        // =========================
+        // MOVEMENT
         // =========================
 
         private Vector2 _flyVelocity;
@@ -59,7 +67,7 @@ namespace TheLostRobotStory.Entities
 
 
         // =========================
-        // GRAVITY PULL
+        // PULL
         // =========================
 
         private float _pullRadius = 350f;
@@ -86,8 +94,6 @@ namespace TheLostRobotStory.Entities
 
             size = new Vector2(96, 96);
 
-
-            // IMPORTANT
             Health = MaxHealth;
 
         }
@@ -97,30 +103,29 @@ namespace TheLostRobotStory.Entities
 
 
         // =========================
-        // PHASES
+        // PHASE SYSTEM
         // =========================
 
         private int Phase
         {
             get
             {
-
                 float hp =
                     (float)Health / MaxHealth;
 
 
-                if (hp > .66f)
+                if (hp > 0.66f)
                     return 1;
 
 
-                if (hp > .33f)
+                if (hp > 0.33f)
                     return 2;
 
 
                 return 3;
-
             }
         }
+
 
 
 
@@ -136,13 +141,17 @@ namespace TheLostRobotStory.Entities
                 return;
 
 
-
             Health -= damage;
 
 
-            _bossHitCooldown = .25f;
+            _bossHitCooldown = 0.25f;
+
 
             _damagedFlash = true;
+
+
+            if (Health < 0)
+                Health = 0;
 
         }
 
@@ -161,8 +170,34 @@ namespace TheLostRobotStory.Entities
             float dt)
         {
 
+
             if (IsDead)
                 return;
+
+
+
+            float distance =
+                Vector2.Distance(
+                    position,
+                    player.position);
+
+
+
+            // =========================
+            // WAIT UNTIL PLAYER CLOSE
+            // =========================
+
+            if (distance <= _aggroRange)
+            {
+                Activated = true;
+            }
+
+
+            if (!Activated)
+            {
+                return;
+            }
+
 
 
 
@@ -179,18 +214,34 @@ namespace TheLostRobotStory.Entities
 
 
 
-            FlyTowardsPlayer(player, dt);
+            // movement
+
+            FlyTowardsPlayer(
+                player,
+                dt);
 
 
 
-            PullPlayer(player, dt);
+            // pull
+
+            PullPlayer(
+                player,
+                dt);
 
 
 
-            if (_dashTimer <= 0 && !_dashing)
+
+
+            // =========================
+            // DASH
+            // =========================
+
+            if (_dashTimer <= 0 &&
+               !_dashing)
             {
                 StartDash(player);
             }
+
 
 
 
@@ -203,17 +254,25 @@ namespace TheLostRobotStory.Entities
                     dt;
 
 
-
                 _dashDuration -= dt;
 
 
-
                 if (_dashDuration <= 0)
+                {
                     _dashing = false;
+                }
 
+
+                return;
             }
 
 
+
+
+
+            // =========================
+            // SHOOT
+            // =========================
 
             if (_shootTimer <= 0)
             {
@@ -222,11 +281,18 @@ namespace TheLostRobotStory.Entities
                     ShootRate();
 
 
-                Shoot(player, projectiles);
-
+                Shoot(
+                    player,
+                    projectiles);
             }
 
 
+
+
+
+            // =========================
+            // SLAM
+            // =========================
 
             if (_slamTimer <= 0)
             {
@@ -251,8 +317,9 @@ namespace TheLostRobotStory.Entities
 
 
 
+
         // =========================
-        // FLYING AI
+        // FLY MOVEMENT
         // =========================
 
         private void FlyTowardsPlayer(
@@ -260,7 +327,9 @@ namespace TheLostRobotStory.Entities
             float dt)
         {
 
+
             _hoverTimer += dt;
+
 
 
             Vector2 target =
@@ -282,7 +351,8 @@ namespace TheLostRobotStory.Entities
 
 
             Vector2 desired =
-                direction * _flySpeed;
+                direction *
+                _flySpeed;
 
 
 
@@ -295,12 +365,14 @@ namespace TheLostRobotStory.Entities
 
 
             position +=
-                _flyVelocity * dt;
+                _flyVelocity *
+                dt;
 
 
 
             position.Y +=
-                (float)Math.Sin(_hoverTimer * 3f)
+                (float)Math.Sin(
+                _hoverTimer * 3f)
                 * 0.5f;
 
         }
@@ -308,19 +380,27 @@ namespace TheLostRobotStory.Entities
 
 
 
+
+
         // =========================
-        // DASH ATTACK
+        // DASH
         // =========================
 
-        private void StartDash(Player player)
+        private void StartDash(
+            Player player)
         {
 
+
             _dashTimer =
-                Phase == 3 ? 3f : 6f;
+                Phase == 3
+                ? 3f
+                : 6f;
 
 
 
-            _dashDuration = .6f;
+            _dashDuration =
+                0.6f;
+
 
 
             _dashDirection =
@@ -341,6 +421,7 @@ namespace TheLostRobotStory.Entities
 
 
 
+
         // =========================
         // SHOOT
         // =========================
@@ -349,7 +430,6 @@ namespace TheLostRobotStory.Entities
             Player player,
             List<Projectile> projectiles)
         {
-
 
             Vector2 future =
                 player.position +
@@ -367,12 +447,14 @@ namespace TheLostRobotStory.Entities
 
 
 
+
             projectiles.Add(
                 new Projectile(
                     position +
                     new Vector2(48, 48),
                     direction,
                     false));
+
 
 
 
@@ -384,9 +466,8 @@ namespace TheLostRobotStory.Entities
                         position,
                         new Vector2(
                             direction.X,
-                            direction.Y - .25f),
+                            direction.Y - 0.25f),
                         false));
-
 
 
                 projectiles.Add(
@@ -394,13 +475,15 @@ namespace TheLostRobotStory.Entities
                         position,
                         new Vector2(
                             direction.X,
-                            direction.Y + .25f),
+                            direction.Y + 0.25f),
                         false));
 
             }
 
-
         }
+
+
+
 
 
 
@@ -412,10 +495,10 @@ namespace TheLostRobotStory.Entities
 
 
             if (Phase == 2)
-                return .9f;
+                return 0.9f;
 
 
-            return .45f;
+            return 0.45f;
 
         }
 
@@ -423,14 +506,16 @@ namespace TheLostRobotStory.Entities
 
 
 
+
         // =========================
-        // PULL EFFECT
+        // PULL
         // =========================
 
         private void PullPlayer(
             Player player,
             float dt)
         {
+
 
             Vector2 pull =
                 position - player.position;
@@ -442,7 +527,8 @@ namespace TheLostRobotStory.Entities
 
 
 
-            if (distance < _pullRadius)
+            if (distance < _pullRadius &&
+               distance > 10)
             {
 
                 pull.Normalize();
@@ -452,12 +538,13 @@ namespace TheLostRobotStory.Entities
                 player.position +=
                     pull *
                     (_pullForce /
-                    Math.Max(distance, 1))
+                    distance)
                     * dt;
 
             }
 
         }
+
 
 
 
@@ -479,19 +566,23 @@ namespace TheLostRobotStory.Entities
             Color color;
 
 
+
             if (_damagedFlash)
             {
                 color = Color.White;
+
                 _damagedFlash = false;
             }
             else
             {
+
                 color =
                     Phase == 1 ?
                     Color.Black :
                     Phase == 2 ?
                     Color.DarkRed :
                     Color.Purple;
+
             }
 
 

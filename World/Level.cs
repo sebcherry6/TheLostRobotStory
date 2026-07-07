@@ -9,65 +9,203 @@ namespace TheLostRobotStory.World
 {
     public class Level
     {
+
+        // =====================================================
+        // OBJECT LISTS
+        // =====================================================
+
         public List<Rectangle> _solids = new();
 
+        // 🟡 Energy crystals (required for door)
         public List<Collectible> _collectibles = new();
 
+
+        // Enemies
         public List<Enemy> _enemies = new();
 
+
+        // Doors
         public List<Door> _doors = new();
 
+
+        // 🔵 Evolution upgrades
         public List<EvolutionCore> _evolutionCores = new();
 
 
+        // Checkpoints
+        public List<Checkpoint> _checkpoints = new();
+
+
+        // ❤️ Health upgrades
+        public List<HealthUpgrade> _healthUpgrades = new();
+
+
+
+
+        // =====================================================
+        // PLAYER SPAWN
+        // =====================================================
+
         public Vector2 _spawnPoint;
+
 
 
         public string CurrentLevelName;
 
 
+
         private const int _tileSize = 32;
 
 
-        // ==========================================
+
+
+
+
+        // =====================================================
+        // HUD COUNTERS
+        // =====================================================
+
+
+        // Energy crystals needed to open door
+        public int CollectiblesRemaining
+        {
+            get
+            {
+                int count = 0;
+
+
+                foreach (var item in _collectibles)
+                {
+                    if (!item.IsCollected)
+                        count++;
+                }
+
+
+                return count;
+            }
+        }
+
+
+
+
+
+        // Enemies blocking door
+        public int EnemiesRemaining
+        {
+            get
+            {
+                int count = 0;
+
+
+                foreach (var enemy in _enemies)
+                {
+                    if (!enemy.IsDead)
+                        count++;
+                }
+
+
+                return count;
+            }
+        }
+
+
+
+
+
+        // Optional HUD information
+        public int HealthUpgradesRemaining
+        {
+            get
+            {
+                int count = 0;
+
+
+                foreach (var item in _healthUpgrades)
+                {
+                    if (!item.IsCollected)
+                        count++;
+                }
+
+
+                return count;
+            }
+        }
+
+
+
+
+
+        // =====================================================
         // LOAD LEVEL
-        // ==========================================
+        // =====================================================
+
         public void Load(string filePath)
         {
+
             _solids.Clear();
+
             _collectibles.Clear();
+
             _enemies.Clear();
+
             _doors.Clear();
+
             _evolutionCores.Clear();
 
+            _checkpoints.Clear();
 
-            CurrentLevelName = Path.GetFileName(filePath);
+            _healthUpgrades.Clear();
 
 
-            string[] lines = File.ReadAllLines(filePath);
+
+            CurrentLevelName =
+                Path.GetFileName(filePath);
+
+
+
+
+            string[] lines =
+                File.ReadAllLines(filePath);
+
 
 
             int enemyIndex = 0;
 
 
+
+
             for (int y = 0; y < lines.Length; y++)
             {
+
+                if (string.IsNullOrWhiteSpace(lines[y]))
+                    continue;
+
+
+
                 for (int x = 0; x < lines[y].Length; x++)
                 {
-                    char tile = lines[y][x];
+
+                    char tile =
+                        lines[y][x];
 
 
-                    Vector2 worldPos = new Vector2(
-                        x * _tileSize,
-                        y * _tileSize);
+
+                    Vector2 worldPos =
+                        new Vector2(
+                            x * _tileSize,
+                            y * _tileSize);
+
+
 
 
                     switch (tile)
                     {
 
-                        // ==========================
+
+                        // =============================
                         // SOLID TILE
-                        // ==========================
+                        // =============================
+
                         case '#':
 
                             _solids.Add(
@@ -81,20 +219,26 @@ namespace TheLostRobotStory.World
 
 
 
-                        // ==========================
+
+                        // =============================
                         // PLAYER SPAWN
-                        // ==========================
+                        // =============================
+
                         case 'P':
 
-                            _spawnPoint = worldPos;
+                            _spawnPoint =
+                                worldPos;
 
                             break;
 
 
 
-                        // ==========================
-                        // NORMAL ENEMY
-                        // ==========================
+
+
+                        // =============================
+                        // ENEMY
+                        // =============================
+
                         case 'E':
 
                             _enemies.Add(
@@ -110,55 +254,77 @@ namespace TheLostRobotStory.World
 
 
 
-                        // ==========================
+
+
+                        // =============================
                         // BOSS
-                        // ==========================
+                        // =============================
+
                         case 'B':
 
                             _enemies.Add(
-                                new Boss(worldPos));
+                                new Boss(
+                                    worldPos));
 
                             break;
 
 
 
-                        // ==========================
+
+
+                        // =============================
                         // DOOR
-                        // ==========================
+                        // =============================
+
                         case 'D':
 
                             _doors.Add(
                                 new Door(
                                     worldPos,
-                                    GetNextLevel(CurrentLevelName)));
+                                    GetNextLevel(
+                                        CurrentLevelName)));
 
                             break;
 
 
 
-                        // ==========================
-                        // NORMAL COLLECTIBLE
-                        // ==========================
+
+                        // =============================
+                        // ENERGY CRYSTAL 🟡
+                        // =============================
+
                         case 'O':
 
                             _collectibles.Add(
-                                new Collectible(worldPos));
+                                new Collectible(
+                                    worldPos,
+                                    CollectibleType.EnergyCrystal));
 
                             break;
 
 
 
-                        // ==========================
-                        // EVOLUTION CORE
-                        // ==========================
+
+                        // =============================
+                        // EVOLUTION CORE 🔵
+                        // =============================
+
                         case 'X':
                             {
+
                                 int stage = 1;
 
 
-                                // Level 3 gives second evolution
+
                                 if (CurrentLevelName == "level3.txt")
                                     stage = 2;
+
+
+
+                                if (CurrentLevelName == "level4.txt")
+                                    stage = 3;
+
+
 
 
                                 _evolutionCores.Add(
@@ -166,193 +332,323 @@ namespace TheLostRobotStory.World
                                         worldPos,
                                         stage));
 
-
                                 break;
                             }
+                        // =============================
+                        // CHECKPOINT
+                        // =============================
+
+                        case 'C':
+
+                            _checkpoints.Add(
+                                new Checkpoint(
+                                    worldPos));
+
+                            break;
+
+
+
+
+
+                        // =============================
+                        // HEALTH UPGRADE ❤️
+                        // =============================
+
+                        case 'H':
+
+                            _healthUpgrades.Add(
+                                new HealthUpgrade(
+                                    worldPos));
+
+                            break;
+
+
                     }
+
                 }
+
             }
+
         }
 
 
 
-        // ==========================================
+
+
+
+
+
+        // =====================================================
         // ENEMY TYPES
-        // ==========================================
+        // =====================================================
+
         private EnemyType GetEnemyType(
             string levelName,
             int index)
         {
+
             switch (levelName)
             {
+
                 case "level1.txt":
 
                     return EnemyType.Normal;
 
 
 
+
                 case "level2.txt":
 
-                    return index % 2 == 0
-                        ? EnemyType.Normal
-                        : EnemyType.Fast;
+                    if (index % 2 == 0)
+                        return EnemyType.Normal;
+
+                    else
+                        return EnemyType.Fast;
+
+
 
 
 
                 case "level3.txt":
+
+                    switch (index % 4)
                     {
-                        int value = index % 4;
 
-
-                        if (value == 0)
+                        case 0:
                             return EnemyType.Tank;
 
 
-                        if (value == 1)
+                        case 1:
                             return EnemyType.Fast;
 
 
-                        if (value == 2)
+                        case 2:
                             return EnemyType.Normal;
 
 
-                        return EnemyType.Laser;
+                        default:
+                            return EnemyType.Laser;
+
                     }
+
+
 
 
 
                 case "level4.txt":
+
+                    switch (index % 4)
                     {
-                        int value = index % 4;
 
-
-                        if (value == 0)
+                        case 0:
                             return EnemyType.Laser;
 
 
-                        if (value == 1)
+                        case 1:
                             return EnemyType.Tank;
 
 
-                        if (value == 2)
+                        case 2:
                             return EnemyType.Fast;
 
 
-                        return EnemyType.Normal;
+                        default:
+                            return EnemyType.Normal;
+
                     }
+
 
 
 
                 default:
 
                     return EnemyType.Normal;
+
             }
-        }
-        // ==========================================
-        // NEXT LEVEL
-        // ==========================================
-        private string GetNextLevel(string currentLevel)
-        {
-            switch (currentLevel)
-            {
-                case "level1.txt":
 
-                    return "level2.txt";
-
-
-                case "level2.txt":
-
-                    return "level3.txt";
-
-
-                case "level3.txt":
-
-                    return "level4.txt";
-
-
-                default:
-
-                    return "level1.txt";
-            }
         }
 
 
 
-        // ==========================================
-        // DRAW LEVEL OBJECTS
-        // ==========================================
-        public void Draw(SpriteBatch spriteBatch)
+
+
+
+
+
+
+        // =====================================================
+        // LEVEL FLOW
+        // =====================================================
+
+        private string GetNextLevel(
+            string current)
         {
 
-            // Tiles
+            if (current == "level1.txt")
+                return "level2.txt";
+
+
+
+            if (current == "level2.txt")
+                return "level3.txt";
+
+
+
+            if (current == "level3.txt")
+                return "level4.txt";
+
+
+
+            return "level1.txt";
+
+        }
+        // =====================================================
+        // DRAW LEVEL
+        // =====================================================
+
+        public void Draw(
+            SpriteBatch spriteBatch)
+        {
+
+
+            // =============================
+            // SOLID TILES
+            // =============================
+
             foreach (var tile in _solids)
             {
+
                 spriteBatch.Draw(
                     TextureManager.Pixel,
                     tile,
                     Color.DarkGray);
+
             }
 
 
 
-            // Normal collectibles
-            foreach (var collectible in _collectibles)
+
+            // =============================
+            // ENERGY CRYSTALS 🟡
+            // =============================
+
+            foreach (var item in _collectibles)
             {
-                collectible.Draw(spriteBatch);
+
+                item.Draw(spriteBatch);
+
             }
 
 
 
-            // Evolution cores
+
+
+            // =============================
+            // EVOLUTION CORES 🔵
+            // =============================
+
             foreach (var core in _evolutionCores)
             {
+
                 core.Draw(spriteBatch);
+
             }
 
 
 
-            // Doors
+
+
+            // =============================
+            // HEALTH UPGRADES ❤️
+            // =============================
+
+            foreach (var health in _healthUpgrades)
+            {
+
+                health.Draw(spriteBatch);
+
+            }
+
+
+
+
+
+            // =============================
+            // CHECKPOINTS
+            // =============================
+
+            foreach (var checkpoint in _checkpoints)
+            {
+
+                checkpoint.Draw(spriteBatch);
+
+            }
+
+
+
+
+
+            // =============================
+            // DOORS
+            // =============================
+
             foreach (var door in _doors)
             {
+
                 door.Draw(spriteBatch);
+
             }
 
 
 
-            // Enemies + boss
+
+
+            // =============================
+            // ENEMIES + BOSS
+            // =============================
+
             foreach (var enemy in _enemies)
             {
+
                 enemy.Draw(spriteBatch);
+
             }
+
         }
 
 
 
-        // ==========================================
-        // LEVEL COMPLETE CHECK
-        // ==========================================
+
+
+
+
+
+
+        // =====================================================
+        // DOOR REQUIREMENT CHECK
+        // =====================================================
+
         public bool IsCleared()
         {
 
-            // Normal collectibles
-            foreach (var collectible in _collectibles)
-            {
-                if (!collectible.IsCollected)
-                    return false;
-            }
+            // Need all energy crystals
+
+            if (CollectiblesRemaining > 0)
+                return false;
 
 
 
-            // Enemies
-            foreach (var enemy in _enemies)
-            {
-                if (!enemy.IsDead)
-                    return false;
-            }
+            // Need all enemies defeated
+
+            if (EnemiesRemaining > 0)
+                return false;
 
 
 
             return true;
+
         }
+
+
     }
 }
