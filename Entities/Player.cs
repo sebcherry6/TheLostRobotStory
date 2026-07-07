@@ -19,39 +19,54 @@ namespace TheLostRobotStory.Entities
         // =========================
         public int Health = 3;
 
-
         public Vector2 SpawnPoint;
 
         public int FacingDirection = 1;
 
 
+
         // =========================
         // MOVEMENT
         // =========================
-        private float _speed = 220f;
-        private float _gravity = 900f;
-        private float _jumpForce = -650f;
+
+        private float _gravity = 1800f;
+        private float _jumpForce = -1000f;
 
         private bool _grounded;
 
         private bool _doubleJumpUsed;
 
 
+        // coyote time
+        private float _coyoteTimer;
+        private float _coyoteTime = 0.12f;
+
+
+        // jump buffer
+        private float _jumpBufferTimer;
+        private float _jumpBufferTime = 0.15f;
+
+
+        private float _maxFallSpeed = 900f;
+
+
 
         // =========================
         // ATTACK
         // =========================
+
         public bool IsAttacking;
 
         private float _attackTimer;
 
-        private float _attackCooldown = 0.35f;
+        private float _attackCooldown = 0.25f;
 
 
 
         // =========================
         // DAMAGE
         // =========================
+
         private float _invincibleTimer;
 
         private float _invincibleDuration = 1f;
@@ -69,9 +84,11 @@ namespace TheLostRobotStory.Entities
 
 
 
+
         // =========================================================
         // UPDATE
         // =========================================================
+
         public void Update(
             GameTime gameTime,
             KeyboardState keyboard,
@@ -84,24 +101,26 @@ namespace TheLostRobotStory.Entities
 
 
 
-            float moveSpeed = GetSpeed();
-
-
-
             // =========================
-            // MOVE
+            // MOVEMENT
             // =========================
+
+            float speed = GetSpeed();
+
+
 
             if (keyboard.IsKeyDown(Keys.A))
             {
-                velocity.X = -moveSpeed;
+                velocity.X = -speed;
                 FacingDirection = -1;
             }
+
             else if (keyboard.IsKeyDown(Keys.D))
             {
-                velocity.X = moveSpeed;
+                velocity.X = speed;
                 FacingDirection = 1;
             }
+
             else
             {
                 velocity.X = 0;
@@ -109,28 +128,39 @@ namespace TheLostRobotStory.Entities
 
 
 
+
             // =========================
-            // JUMP
+            // COYOTE TIMER
             // =========================
 
-            if (keyboard.IsKeyDown(Keys.Space)
-                &&
-                previousKeyboard.IsKeyUp(Keys.Space))
+            if (_grounded)
+                _coyoteTimer = _coyoteTime;
+
+            else
+                _coyoteTimer -= dt;
+
+
+
+
+            // =========================
+            // JUMP BUFFER
+            // =========================
+
+            if (keyboard.IsKeyDown(Keys.Space) &&
+               previousKeyboard.IsKeyUp(Keys.Space))
             {
-
-                if (_grounded)
-                {
-                    velocity.Y = _jumpForce;
-                    _grounded = false;
-                }
-
-                else if (EvolutionStage >= 2 &&
-                        !_doubleJumpUsed)
-                {
-                    velocity.Y = _jumpForce;
-                    _doubleJumpUsed = true;
-                }
+                _jumpBufferTimer = _jumpBufferTime;
             }
+
+            else
+            {
+                _jumpBufferTimer -= dt;
+            }
+
+
+
+            TryJump();
+
 
 
 
@@ -141,45 +171,49 @@ namespace TheLostRobotStory.Entities
             velocity.Y += _gravity * dt;
 
 
-            position.X += velocity.X * dt;
+            if (velocity.Y > _maxFallSpeed)
+                velocity.Y = _maxFallSpeed;
 
-            position.Y += velocity.Y * dt;
+
+
+            position += velocity * dt;
+
+
 
 
 
             // =========================
-            // SHOOTING
+            // SHOOT
             // =========================
 
             if (EvolutionStage >= 1 &&
                keyboard.IsKeyDown(Keys.K) &&
                previousKeyboard.IsKeyUp(Keys.K))
             {
-
                 Shoot(projectiles);
-
             }
 
 
 
+
             // =========================
-            // MELEE ATTACK
+            // ATTACK
             // =========================
 
             if (_attackTimer > 0)
             {
                 _attackTimer -= dt;
-
                 IsAttacking = true;
             }
+
             else
             {
                 IsAttacking = false;
             }
 
 
-            if (keyboard.IsKeyDown(Keys.J)
-               &&
+
+            if (keyboard.IsKeyDown(Keys.J) &&
                _attackTimer <= 0)
             {
                 _attackTimer = _attackCooldown;
@@ -188,17 +222,68 @@ namespace TheLostRobotStory.Entities
 
 
             // =========================
-            // DAMAGE TIMER
+            // VARIABLE JUMP
             // =========================
+
+            if (keyboard.IsKeyUp(Keys.Space) &&
+               velocity.Y < 0)
+            {
+                velocity.Y += 900f * dt;
+            }
+
+
+
 
             if (_invincibleTimer > 0)
                 _invincibleTimer -= dt;
+
         }
 
 
 
+
+        private void TryJump()
+        {
+
+            if (_jumpBufferTimer <= 0)
+                return;
+
+
+
+            if (_coyoteTimer > 0)
+            {
+
+                velocity.Y = _jumpForce;
+
+                _grounded = false;
+
+                _coyoteTimer = 0;
+
+                _jumpBufferTimer = 0;
+
+            }
+
+
+            else if (EvolutionStage >= 2 &&
+                    !_doubleJumpUsed)
+            {
+
+                velocity.Y = _jumpForce;
+
+                _doubleJumpUsed = true;
+
+                _jumpBufferTimer = 0;
+
+            }
+
+        }
+
+
+
+
+
         // =========================================================
-        // SHOOTING
+        // SHOOT
         // =========================================================
 
         private void Shoot(List<Projectile> projectiles)
@@ -212,40 +297,44 @@ namespace TheLostRobotStory.Entities
 
             if (EvolutionStage == 1)
             {
+
                 projectiles.Add(
                     new Projectile(
-                    spawn,
-                    new Vector2(FacingDirection, 0),
-                    true));
+                        spawn,
+                        new Vector2(FacingDirection, 0),
+                        true));
+
             }
 
 
-            else if (EvolutionStage >= 2)
+
+            if (EvolutionStage >= 2)
             {
 
                 projectiles.Add(
                     new Projectile(
-                    spawn,
-                    new Vector2(FacingDirection, 0),
-                    true));
+                        spawn,
+                        new Vector2(FacingDirection, 0),
+                        true));
 
 
                 projectiles.Add(
                     new Projectile(
-                    spawn,
-                    new Vector2(
-                        FacingDirection,
-                        -0.3f),
-                    true));
+                        spawn,
+                        new Vector2(
+                            FacingDirection,
+                            -0.25f),
+                        true));
 
 
                 projectiles.Add(
                     new Projectile(
-                    spawn,
-                    new Vector2(
-                        FacingDirection,
-                        0.3f),
-                    true));
+                        spawn,
+                        new Vector2(
+                            FacingDirection,
+                            0.25f),
+                        true));
+
             }
 
         }
@@ -276,11 +365,12 @@ namespace TheLostRobotStory.Entities
 
 
                 Rectangle overlap =
-                    Rectangle.Intersect(box, tile);
+                    Rectangle.Intersect(
+                        box,
+                        tile);
 
 
 
-                // vertical
                 if (overlap.Height < overlap.Width)
                 {
 
@@ -297,19 +387,21 @@ namespace TheLostRobotStory.Entities
                         _grounded = true;
 
                         _doubleJumpUsed = false;
+
                     }
+
                     else
                     {
+
                         position.Y =
                             tile.Bottom;
 
                         velocity.Y = 0;
+
                     }
 
                 }
 
-
-                // horizontal
                 else
                 {
 
@@ -324,7 +416,9 @@ namespace TheLostRobotStory.Entities
                 }
 
 
+
                 box = Bounds;
+
             }
 
         }
@@ -338,13 +432,10 @@ namespace TheLostRobotStory.Entities
 
         public void Evolve(int stage)
         {
-
             if (stage > EvolutionStage)
-            {
                 EvolutionStage = stage;
-            }
-
         }
+
 
 
 
@@ -352,22 +443,13 @@ namespace TheLostRobotStory.Entities
         private float GetSpeed()
         {
 
-            switch (EvolutionStage)
+            return EvolutionStage switch
             {
-
-                case 1:
-                    return 260f;
-
-                case 2:
-                    return 300f;
-
-                case 3:
-                    return 340f;
-
-
-                default:
-                    return 220f;
-            }
+                1 => 260f,
+                2 => 300f,
+                3 => 340f,
+                _ => 220f
+            };
 
         }
 
@@ -375,20 +457,16 @@ namespace TheLostRobotStory.Entities
 
 
 
-        // =========================================================
-        // ATTACK HITBOX
-        // =========================================================
-
         public Rectangle AttackHitbox
         {
             get
             {
+
                 if (!IsAttacking)
                     return Rectangle.Empty;
 
 
                 return new Rectangle(
-
                     FacingDirection == 1
                     ? Bounds.Right
                     : Bounds.Left - 30,
@@ -397,24 +475,20 @@ namespace TheLostRobotStory.Entities
 
                     30,
 
-                    Bounds.Height
-                );
+                    Bounds.Height);
+
             }
         }
 
 
 
 
-        // =========================================================
-        // DAMAGE
-        // =========================================================
 
         public void CheckEnemyCollision(List<Enemy> enemies)
         {
 
             if (_invincibleTimer > 0)
                 return;
-
 
 
             foreach (var enemy in enemies)
@@ -429,10 +503,10 @@ namespace TheLostRobotStory.Entities
                         _invincibleDuration;
 
 
-                    velocity.Y = -200;
-
+                    velocity.Y = -300;
 
                     break;
+
                 }
 
             }
@@ -452,7 +526,6 @@ namespace TheLostRobotStory.Entities
 
                 velocity = Vector2.Zero;
 
-
                 Health = 3;
 
                 EvolutionStage = 0;
@@ -464,12 +537,11 @@ namespace TheLostRobotStory.Entities
 
 
 
+
         public override void Draw(SpriteBatch spriteBatch)
         {
 
-            Color color =
-                Color.White;
-
+            Color color = Color.White;
 
 
             if (EvolutionStage == 1)
@@ -487,7 +559,6 @@ namespace TheLostRobotStory.Entities
 
             if (IsAttacking)
                 color = Color.Orange;
-
 
 
             if (_invincibleTimer > 0)
