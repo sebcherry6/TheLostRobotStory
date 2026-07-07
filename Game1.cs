@@ -26,22 +26,16 @@ namespace TheLostRobotStory
 
         private Door _activeDoor;
 
-        // =========================
         // TRANSITION
-        // =========================
         private bool _isTransitioning;
         private bool _levelLoaded;
         private float _fade;
 
-        // =========================
         // INPUT
-        // =========================
         private KeyboardState _keyboard;
         private KeyboardState _previousKeyboard;
 
-        // =========================
-        // CAMERA SHAKE
-        // =========================
+        // SHAKE
         private float _shakeTimer;
         private float _shakeMagnitude;
         private Vector2 _shakeOffset;
@@ -60,6 +54,11 @@ namespace TheLostRobotStory
             _camera = new Camera();
             _levelManager = new LevelManager();
             _hud = new HUD();
+
+            Boss.BossSlamEvent += () =>
+            {
+                StartShake(0.25f, 6f);
+            };
 
             base.Initialize();
         }
@@ -86,15 +85,13 @@ namespace TheLostRobotStory
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            // =====================================================
-            // INPUT (FIXED — ALWAYS CORRECT ORDER)
-            // =====================================================
+            // IMPORTANT INPUT ORDER FIX
             _previousKeyboard = _keyboard;
             _keyboard = Keyboard.GetState();
 
-            // =====================================================
+            // =========================
             // TRANSITION
-            // =====================================================
+            // =========================
             if (_isTransitioning)
             {
                 _fade += 0.05f;
@@ -118,49 +115,28 @@ namespace TheLostRobotStory
                 return;
             }
 
-            // =====================================================
-            // PLAYER (CRITICAL FIX POINT)
-            // =====================================================
+            // =========================
+            // PLAYER
+            // =========================
             _player.Update(gameTime, _keyboard, _previousKeyboard, _projectiles);
             _player.ApplyCollision(_level._solids);
 
-            // =====================================================
+            // =========================
             // COLLECTIBLES
-            // =====================================================
+            // =========================
             foreach (var c in _level._collectibles)
             {
                 if (!c.IsCollected && _player.Bounds.Intersects(c.Bounds))
                     c.IsCollected = true;
             }
 
-            // =====================================================
-            // LEVEL CLEAR
-            // =====================================================
+            // =========================
+            // DOORS
+            // =========================
             bool levelReady = _level.IsCleared();
             foreach (var d in _level._doors)
                 d.CanOpen = levelReady;
 
-            // =====================================================
-            // PROJECTILES
-            // =====================================================
-            for (int i = _projectiles.Count - 1; i >= 0; i--)
-            {
-                var p = _projectiles[i];
-
-                p.Update(_level._solids);
-
-                foreach (var enemy in _level._enemies)
-                    p.HitEnemy(enemy);
-
-                p.HitPlayer(_player);
-
-                if (p.IsDead)
-                    _projectiles.RemoveAt(i);
-            }
-
-            // =====================================================
-            // DOORS
-            // =====================================================
             _activeDoor = null;
 
             foreach (var door in _level._doors)
@@ -180,9 +156,27 @@ namespace TheLostRobotStory
                 }
             }
 
-            // =====================================================
+            // =========================
+            // PROJECTILES
+            // =========================
+            for (int i = _projectiles.Count - 1; i >= 0; i--)
+            {
+                var p = _projectiles[i];
+
+                p.Update(_level._solids);
+
+                foreach (var enemy in _level._enemies)
+                    p.HitEnemy(enemy);
+
+                p.HitPlayer(_player);
+
+                if (p.IsDead)
+                    _projectiles.RemoveAt(i);
+            }
+
+            // =========================
             // SHAKE
-            // =====================================================
+            // =========================
             if (_shakeTimer > 0 && !_isTransitioning)
             {
                 _shakeTimer -= dt;
@@ -197,9 +191,9 @@ namespace TheLostRobotStory
                 _shakeOffset = Vector2.Zero;
             }
 
-            // =====================================================
-            // ENEMIES
-            // =====================================================
+            // =========================
+            // ENEMIES (FIXED - NO DOUBLE UPDATE)
+            // =========================
             for (int i = _level._enemies.Count - 1; i >= 0; i--)
             {
                 var enemy = _level._enemies[i];
@@ -217,25 +211,29 @@ namespace TheLostRobotStory
                 {
                     _particles.SpawnExplosion(enemy.position, Color.OrangeRed);
                     StartShake(0.2f, 4f);
-
                     _level._enemies.RemoveAt(i);
                 }
             }
 
-            // =====================================================
+            if (_level != null && _level.CurrentLevelName == "level3")
+            {
+                if (_player != null)
+                {
+                    // simple rule: collect all collectibles OR reach end
+                    if (_level.IsCleared())
+                    {
+                        _player.EvolutionStage = 1;
+                    }
+                }
+            }
+
+            // =========================
             // PLAYER DAMAGE
-            // =====================================================
+            // =========================
             _player.CheckEnemyCollision(_level._enemies);
             _player.CheckDeath();
 
-            // =====================================================
-            // CAMERA
-            // =====================================================
             _camera.Follow(_player.position);
-
-            // =====================================================
-            // PARTICLES
-            // =====================================================
             _particles.Update(gameTime);
 
             base.Update(gameTime);
@@ -249,6 +247,9 @@ namespace TheLostRobotStory
                 _camera.GetViewMatrix() *
                 Matrix.CreateTranslation(new Vector3(_shakeOffset, 0));
 
+            // =========================
+            // WORLD
+            // =========================
             _spriteBatch.Begin(transformMatrix: cameraMatrix);
 
             _level.Draw(_spriteBatch);
@@ -260,10 +261,42 @@ namespace TheLostRobotStory
 
             _spriteBatch.End();
 
+            // =========================
+            // UI
+            // =========================
             _spriteBatch.Begin();
 
             _hud.Draw(_spriteBatch, _player.Health);
 
+            // =========================
+            // BOSS HP BAR (FIXED POSITION)
+            // =========================
+            foreach (var enemy in _level._enemies)
+            {
+                if (enemy is Boss boss)
+                {
+                    float hp = (float)boss.Health / boss.MaxHealth;
+
+                    Vector2 screenPos = boss.position;
+
+                    // offset above boss
+                    screenPos.Y -= 25;
+                    screenPos.X -= 40;
+
+                    int w = 80;
+                    int h = 6;
+
+                    Rectangle bg = new Rectangle((int)screenPos.X, (int)screenPos.Y, w, h);
+                    Rectangle fg = new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)(w * hp), h);
+
+                    _spriteBatch.Draw(TextureManager.Pixel, bg, Color.DarkRed);
+                    _spriteBatch.Draw(TextureManager.Pixel, fg, Color.LimeGreen);
+                }
+            }
+
+            // =========================
+            // DOOR TEXT
+            // =========================
             if (_activeDoor != null && !_isTransitioning)
             {
                 string text = _activeDoor.CanOpen
@@ -282,6 +315,9 @@ namespace TheLostRobotStory
 
             _spriteBatch.End();
 
+            // =========================
+            // FADE + ARENA WALLS
+            // =========================
             _spriteBatch.Begin();
 
             if (_isTransitioning)
@@ -292,6 +328,14 @@ namespace TheLostRobotStory
                     Color.Black * MathHelper.Clamp(_fade, 0f, 1f)
                 );
             }
+
+            float shrink = Boss.ArenaShrink;
+
+            Rectangle leftWall = new Rectangle((int)shrink, 0, 10, 2000);
+            Rectangle rightWall = new Rectangle(1920 - (int)shrink, 0, 10, 2000);
+
+            _spriteBatch.Draw(TextureManager.Pixel, leftWall, Color.Red);
+            _spriteBatch.Draw(TextureManager.Pixel, rightWall, Color.Red);
 
             _spriteBatch.End();
 

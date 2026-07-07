@@ -7,259 +7,190 @@ namespace TheLostRobotStory.Entities
 {
     public class Boss : Enemy
     {
-        public int MaxHealth = 30;
+        public int MaxHealth = 60;
         public int Health;
 
         public bool IsDead => Health <= 0;
 
-        private int _direction = 1;
-
-        private float _gravity = 0.5f;
+        // =========================
+        // MOVEMENT
+        // =========================
+        private Vector2 _velocity;
+        private float _moveSpeed = 180f;
 
         // =========================
-        // PHASE / AI TIMERS
+        // ATTACK TIMERS
         // =========================
-        private float _shootTimer = 2f;
-        private float _chargeTimer = 5f;
-        private float _stompTimer = 4f;
+        private float _shootTimer = 1.2f;
+        private float _dashTimer = 5f;
+        private float _slamTimer = 4f;
 
-        private bool _isCharging;
-        private Vector2 _chargeVelocity;
+        private bool _dashing;
+        private Vector2 _dashVelocity;
+
+        // =========================
+        // DAMAGE COOLDOWN (IMPORTANT FIX)
+        // =========================
+        private float _hitCooldown;
+
+        // =========================
+        // GRAVITY PULL
+        // =========================
+        private float _gravityPullRadius = 350f;
+        private float _pullStrength = 180f;
+
+        public static float ArenaShrink = 0f;
+        public static System.Action BossSlamEvent;
 
         public Boss(Vector2 startPos)
-            : base(startPos, EnemyType.Tank) // or Boss type if you add one
+            : base(startPos, EnemyType.Laser)
         {
-            size = new Vector2(64, 64);
-            Health = 20;
+            position = startPos;
+            size = new Vector2(96, 96);
+
+            Health = MaxHealth; // IMPORTANT FIX
         }
 
         // =========================
-        // PHASE LOGIC
+        // DAMAGE (FIXED)
         // =========================
-        private int Phase
-        {
-            get
-            {
-                float hpPercent = (float)Health / MaxHealth;
-
-                if (hpPercent > 0.66f)
-                    return 1;
-
-                if (hpPercent > 0.33f)
-                    return 2;
-
-                return 3;
-            }
-        }
-
         public void TakeDamage(int dmg)
         {
+            if (_hitCooldown > 0f)
+                return;
+
             Health -= dmg;
+            _hitCooldown = 0.15f; // prevents instant multi-hit melt
         }
 
         // =========================
-        // MAIN UPDATE
+        // UPDATE
         // =========================
-        public void Update(List<Rectangle> solids, Player player, List<Projectile> projectiles)
+        public void Update(
+            List<Rectangle> solids,
+            Player player,
+            List<Projectile> projectiles,
+            float dt)
         {
             if (IsDead)
                 return;
 
-            float speed = GetSpeed();
+            // cooldown tick
+            if (_hitCooldown > 0f)
+                _hitCooldown -= dt;
+
+            // timers
+            _shootTimer -= dt;
+            _dashTimer -= dt;
+            _slamTimer -= dt;
+
+            ApplyGravityPull(player, dt);
 
             // =========================
-            // CHARGE ATTACK (PHASE 2+)
+            // DASH
             // =========================
-            if (Phase >= 2)
+            if (_dashTimer <= 0f && !_dashing)
             {
-                _chargeTimer -= 1f / 60f;
+                _dashTimer = 6f;
 
-                if (!_isCharging && _chargeTimer <= 0)
-                {
-                    _isCharging = true;
+                Vector2 dir = player.position - position;
+                if (dir != Vector2.Zero)
+                    dir.Normalize();
 
-                    Vector2 dir = player.position - position;
-                    if (dir != Vector2.Zero)
-                        dir.Normalize();
+                _dashVelocity = dir * 600f;
+                _dashing = true;
+            }
 
-                    _chargeVelocity = dir * 10f;
-                }
+            if (_dashing)
+            {
+                position += _dashVelocity * dt;
+                _dashVelocity *= 0.92f;
 
-                if (_isCharging)
-                {
-                    position += _chargeVelocity;
+                if (_dashVelocity.Length() < 40f)
+                    _dashing = false;
 
-                    ResolveHorizontal(solids);
-
-                    _chargeVelocity *= 0.95f;
-
-                    if (_chargeVelocity.Length() < 1f)
-                    {
-                        _isCharging = false;
-                        _chargeTimer = 4f;
-                    }
-
-                    return; // skip normal AI while charging
-                }
+                return;
             }
 
             // =========================
-            // NORMAL MOVEMENT
+            // CHASE (HOVER)
             // =========================
-            position.X += speed * _direction;
+            Vector2 toPlayer = player.position - position;
 
-            ResolveHorizontal(solids);
+            if (toPlayer != Vector2.Zero)
+                toPlayer.Normalize();
 
-            // =========================
-            // GRAVITY
-            // =========================
-            velocity.Y += _gravity;
-            position.Y += velocity.Y;
-
-            ResolveVertical(solids);
+            position += toPlayer * _moveSpeed * dt;
 
             // =========================
-            // SHOOTING (ALL PHASES)
+            // SHOOT
             // =========================
-            _shootTimer -= 1f / 60f;
-
-            if (_shootTimer <= 0)
+            if (_shootTimer <= 0f)
             {
-                _shootTimer = GetShootRate();
-
-                FireProjectile(player, projectiles);
+                _shootTimer = 1.0f;
+                Fire(player, projectiles);
             }
 
             // =========================
-            // STOMP ATTACK (PHASE 3)
+            // SLAM EVENT
             // =========================
-            if (Phase >= 3)
+            if (_slamTimer <= 0f)
             {
-                _stompTimer -= 1f / 60f;
-
-                if (_stompTimer <= 0)
-                {
-                    _stompTimer = 3.5f;
-
-                    velocity.Y = 10f; // big slam down
-
-                    // NOTE: you can hook camera shake from Game1 when detecting stomp
-                }
+                _slamTimer = 5f;
+                BossSlamEvent?.Invoke();
+                ArenaShrink += 10f;
             }
         }
 
         // =========================
-        // HELPERS
+        // GRAVITY PULL
         // =========================
-        private float GetSpeed()
+        private void ApplyGravityPull(Player player, float dt)
         {
-            switch (Phase)
+            Vector2 toBoss = position - player.position;
+            float dist = toBoss.Length();
+
+            if (dist < _gravityPullRadius && dist > 1f)
             {
-                case 1: return 2.5f;
-                case 2: return 3.5f;
-                case 3: return 4.5f;
-                default: return 2.5f;
+                toBoss.Normalize();
+
+                float force = _pullStrength / dist;
+
+                player.position += toBoss * force * dt;
             }
         }
 
-        private float GetShootRate()
-        {
-            switch (Phase)
-            {
-                case 1: return 2.0f;
-                case 2: return 1.2f;
-                case 3: return 0.6f;
-                default: return 2.0f;
-            }
-        }
-
-        private void FireProjectile(Player player, List<Projectile> projectiles)
+        // =========================
+        // SHOOT
+        // =========================
+        private void Fire(Player player, List<Projectile> projectiles)
         {
             Vector2 dir = player.position - position;
 
             if (dir != Vector2.Zero)
                 dir.Normalize();
 
-            // phase-based spread
-            if (Phase == 1)
-            {
-                projectiles.Add(new Projectile(
-                    position + new Vector2(size.X / 2, size.Y / 2),
-                    dir,
-                    false));
-            }
-            else if (Phase == 2)
-            {
-                projectiles.Add(new Projectile(position, dir, false));
-                projectiles.Add(new Projectile(position, new Vector2(dir.X, dir.Y + 0.2f), false));
-            }
-            else
-            {
-                // phase 3 bullet hell
-                for (int i = -2; i <= 2; i++)
-                {
-                    Vector2 spread = new Vector2(dir.X + i * 0.2f, dir.Y);
-                    projectiles.Add(new Projectile(position, spread, false));
-                }
-            }
+            projectiles.Add(new Projectile(
+                position + new Vector2(size.X / 2, size.Y / 2),
+                dir,
+                false
+            ));
         }
 
         // =========================
-        // COLLISION
-        // =========================
-        private void ResolveHorizontal(List<Rectangle> solids)
-        {
-            Rectangle box = Bounds;
-
-            foreach (var tile in solids)
-            {
-                if (!box.Intersects(tile))
-                    continue;
-
-                _direction *= -1;
-
-                if (position.X < tile.X)
-                    position.X = tile.Left - size.X;
-                else
-                    position.X = tile.Right;
-
-                break;
-            }
-        }
-
-        private void ResolveVertical(List<Rectangle> solids)
-        {
-            Rectangle box = Bounds;
-
-            foreach (var tile in solids)
-            {
-                if (!box.Intersects(tile))
-                    continue;
-
-                if (velocity.Y > 0)
-                    position.Y = tile.Top - size.Y;
-                else
-                    position.Y = tile.Bottom;
-
-                velocity.Y = 0;
-                break;
-            }
-        }
-
-        // =========================
-        // DRAW
+        // DRAW (NO HP BAR HERE)
         // =========================
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (IsDead)
                 return;
 
-            Color color = Color.Black;
+            float hp = (float)Health / MaxHealth;
 
-            if (Phase == 2)
-                color = Color.DarkRed;
-            else if (Phase == 3)
-                color = Color.Purple;
+            Color color =
+                hp > 0.5f ? Color.Black :
+                hp > 0.25f ? Color.DarkRed :
+                Color.Purple;
 
             spriteBatch.Draw(TextureManager.Pixel, Bounds, color);
         }

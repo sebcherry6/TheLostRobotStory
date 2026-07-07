@@ -133,6 +133,7 @@ namespace TheLostRobotStory.Entities
                     ));
                 }
             }
+
         }
 
         public override void Draw(SpriteBatch spriteBatch)
