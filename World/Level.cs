@@ -16,29 +16,36 @@ namespace TheLostRobotStory.World
 
         public List<Rectangle> _solids = new();
 
-        // 🟡 Energy crystals (required for door)
+
         public List<Collectible> _collectibles = new();
 
 
-        // Enemies
         public List<Enemy> _enemies = new();
 
 
-        // Doors
         public List<Door> _doors = new();
 
 
-        // 🔵 Evolution upgrades
         public List<EvolutionCore> _evolutionCores = new();
 
 
-        // Checkpoints
         public List<Checkpoint> _checkpoints = new();
 
 
-        // ❤️ Health upgrades
         public List<HealthUpgrade> _healthUpgrades = new();
 
+
+        public List<Acid> _acidPools = new();
+
+
+        public List<LaserGate> _laserGates = new();
+
+
+        public List<MovingPlatform> _movingPlatforms = new();
+
+
+
+        private ParticleManager _particles;
 
 
 
@@ -47,7 +54,6 @@ namespace TheLostRobotStory.World
         // =====================================================
 
         public Vector2 _spawnPoint;
-
 
 
         public string CurrentLevelName;
@@ -60,13 +66,67 @@ namespace TheLostRobotStory.World
 
 
 
+        // =====================================================
+        // CONSTRUCTOR
+        // =====================================================
+
+        public Level(
+            ParticleManager particles = null)
+        {
+
+            _particles = particles;
+
+        }
+
+
+
+
+
+        // =====================================================
+        // UPDATE WORLD OBJECTS
+        // =====================================================
+
+        public void Update(
+            GameTime gameTime,
+            Player player)
+        {
+
+
+            foreach (var platform in _movingPlatforms)
+            {
+                platform.Update(
+                    gameTime);
+            }
+
+
+
+            foreach (var acid in _acidPools)
+            {
+                acid.Update(
+                    gameTime,
+                    player);
+            }
+
+
+
+            foreach (var laser in _laserGates)
+            {
+                laser.Update(
+                    gameTime,
+                    player);
+            }
+
+        }
+
+
+
+
 
         // =====================================================
         // HUD COUNTERS
         // =====================================================
 
 
-        // Energy crystals needed to open door
         public int CollectiblesRemaining
         {
             get
@@ -89,7 +149,6 @@ namespace TheLostRobotStory.World
 
 
 
-        // Enemies blocking door
         public int EnemiesRemaining
         {
             get
@@ -112,7 +171,6 @@ namespace TheLostRobotStory.World
 
 
 
-        // Optional HUD information
         public int HealthUpgradesRemaining
         {
             get
@@ -139,8 +197,12 @@ namespace TheLostRobotStory.World
         // LOAD LEVEL
         // =====================================================
 
-        public void Load(string filePath)
+        public void Load(
+            string filePath)
         {
+
+
+            // Reset everything
 
             _solids.Clear();
 
@@ -156,16 +218,32 @@ namespace TheLostRobotStory.World
 
             _healthUpgrades.Clear();
 
+            _acidPools.Clear();
+
+            _laserGates.Clear();
+
+            _movingPlatforms.Clear();
+
+
+
+            // Reset spawn
+
+            _spawnPoint =
+                Vector2.Zero;
+
 
 
             CurrentLevelName =
-                Path.GetFileName(filePath);
+                Path.GetFileName(
+                    filePath);
+
 
 
 
 
             string[] lines =
-                File.ReadAllLines(filePath);
+                File.ReadAllLines(
+                    filePath);
 
 
 
@@ -174,8 +252,10 @@ namespace TheLostRobotStory.World
 
 
 
+
             for (int y = 0; y < lines.Length; y++)
             {
+
 
                 if (string.IsNullOrWhiteSpace(lines[y]))
                     continue;
@@ -184,6 +264,7 @@ namespace TheLostRobotStory.World
 
                 for (int x = 0; x < lines[y].Length; x++)
                 {
+
 
                     char tile =
                         lines[y][x];
@@ -198,12 +279,13 @@ namespace TheLostRobotStory.World
 
 
 
+
                     switch (tile)
                     {
 
 
                         // =============================
-                        // SOLID TILE
+                        // SOLID
                         // =============================
 
                         case '#':
@@ -216,6 +298,7 @@ namespace TheLostRobotStory.World
                                     _tileSize));
 
                             break;
+
 
 
 
@@ -289,8 +372,9 @@ namespace TheLostRobotStory.World
 
 
 
+
                         // =============================
-                        // ENERGY CRYSTAL 🟡
+                        // CRYSTAL
                         // =============================
 
                         case 'O':
@@ -305,8 +389,9 @@ namespace TheLostRobotStory.World
 
 
 
+
                         // =============================
-                        // EVOLUTION CORE 🔵
+                        // EVOLUTION CORE
                         // =============================
 
                         case 'X':
@@ -315,15 +400,12 @@ namespace TheLostRobotStory.World
                                 int stage = 1;
 
 
-
                                 if (CurrentLevelName == "level3.txt")
                                     stage = 2;
 
 
-
                                 if (CurrentLevelName == "level4.txt")
                                     stage = 3;
-
 
 
 
@@ -332,7 +414,9 @@ namespace TheLostRobotStory.World
                                         worldPos,
                                         stage));
 
+
                                 break;
+
                             }
                         // =============================
                         // CHECKPOINT
@@ -351,7 +435,7 @@ namespace TheLostRobotStory.World
 
 
                         // =============================
-                        // HEALTH UPGRADE ❤️
+                        // HEALTH UPGRADE
                         // =============================
 
                         case 'H':
@@ -363,6 +447,57 @@ namespace TheLostRobotStory.World
                             break;
 
 
+
+
+
+                        // =============================
+                        // ACID POOL
+                        // =============================
+
+                        case 'A':
+
+                            _acidPools.Add(
+                                new Acid(
+                                    worldPos,
+                                    _particles));
+
+                            break;
+
+
+
+
+
+                        // =============================
+                        // LASER GATE
+                        // =============================
+
+                        case 'L':
+
+                            _laserGates.Add(
+                                new LaserGate(
+                                    worldPos,
+                                    _particles));
+
+                            break;
+
+
+
+
+
+                        // =============================
+                        // MOVING PLATFORM
+                        // =============================
+
+                        case 'M':
+
+                            _movingPlatforms.Add(
+                                new MovingPlatform(
+                                    worldPos,
+                                    worldPos + new Vector2(160, 0)));
+
+                            break;
+
+
                     }
 
                 }
@@ -370,7 +505,6 @@ namespace TheLostRobotStory.World
             }
 
         }
-
 
 
 
@@ -396,16 +530,11 @@ namespace TheLostRobotStory.World
 
 
 
-
                 case "level2.txt":
 
-                    if (index % 2 == 0)
-                        return EnemyType.Normal;
-
-                    else
-                        return EnemyType.Fast;
-
-
+                    return index % 2 == 0
+                        ? EnemyType.Normal
+                        : EnemyType.Fast;
 
 
 
@@ -458,8 +587,6 @@ namespace TheLostRobotStory.World
                     }
 
 
-
-
                 default:
 
                     return EnemyType.Normal;
@@ -488,22 +615,28 @@ namespace TheLostRobotStory.World
                 return "level2.txt";
 
 
-
             if (current == "level2.txt")
                 return "level3.txt";
-
 
 
             if (current == "level3.txt")
                 return "level4.txt";
 
 
-
             return "level1.txt";
 
         }
+
+
+
+
+
+
+
+
+
         // =====================================================
-        // DRAW LEVEL
+        // DRAW
         // =====================================================
 
         public void Draw(
@@ -511,9 +644,8 @@ namespace TheLostRobotStory.World
         {
 
 
-            // =============================
-            // SOLID TILES
-            // =============================
+
+            // SOLIDS
 
             foreach (var tile in _solids)
             {
@@ -528,14 +660,67 @@ namespace TheLostRobotStory.World
 
 
 
-            // =============================
-            // ENERGY CRYSTALS 🟡
-            // =============================
+
+
+
+            // MOVING PLATFORMS
+
+            foreach (var platform in _movingPlatforms)
+            {
+
+                platform.Draw(
+                    spriteBatch);
+
+            }
+
+
+
+
+
+
+
+
+            // ACID
+
+            foreach (var acid in _acidPools)
+            {
+
+                acid.Draw(
+                    spriteBatch);
+
+            }
+
+
+
+
+
+
+
+
+            // LASERS
+
+            foreach (var laser in _laserGates)
+            {
+
+                laser.Draw(
+                    spriteBatch);
+
+            }
+
+
+
+
+
+
+
+
+            // CRYSTALS
 
             foreach (var item in _collectibles)
             {
 
-                item.Draw(spriteBatch);
+                item.Draw(
+                    spriteBatch);
 
             }
 
@@ -543,14 +728,16 @@ namespace TheLostRobotStory.World
 
 
 
-            // =============================
-            // EVOLUTION CORES 🔵
-            // =============================
+
+
+
+            // EVOLUTION
 
             foreach (var core in _evolutionCores)
             {
 
-                core.Draw(spriteBatch);
+                core.Draw(
+                    spriteBatch);
 
             }
 
@@ -558,14 +745,16 @@ namespace TheLostRobotStory.World
 
 
 
-            // =============================
-            // HEALTH UPGRADES ❤️
-            // =============================
+
+
+
+            // HEALTH
 
             foreach (var health in _healthUpgrades)
             {
 
-                health.Draw(spriteBatch);
+                health.Draw(
+                    spriteBatch);
 
             }
 
@@ -573,14 +762,16 @@ namespace TheLostRobotStory.World
 
 
 
-            // =============================
+
+
+
             // CHECKPOINTS
-            // =============================
 
             foreach (var checkpoint in _checkpoints)
             {
 
-                checkpoint.Draw(spriteBatch);
+                checkpoint.Draw(
+                    spriteBatch);
 
             }
 
@@ -588,14 +779,16 @@ namespace TheLostRobotStory.World
 
 
 
-            // =============================
+
+
+
             // DOORS
-            // =============================
 
             foreach (var door in _doors)
             {
 
-                door.Draw(spriteBatch);
+                door.Draw(
+                    spriteBatch);
 
             }
 
@@ -603,14 +796,16 @@ namespace TheLostRobotStory.World
 
 
 
-            // =============================
-            // ENEMIES + BOSS
-            // =============================
+
+
+
+            // ENEMIES
 
             foreach (var enemy in _enemies)
             {
 
-                enemy.Draw(spriteBatch);
+                enemy.Draw(
+                    spriteBatch);
 
             }
 
@@ -624,21 +819,19 @@ namespace TheLostRobotStory.World
 
 
 
+
         // =====================================================
-        // DOOR REQUIREMENT CHECK
+        // LEVEL CLEAR CHECK
         // =====================================================
 
         public bool IsCleared()
         {
 
-            // Need all energy crystals
 
             if (CollectiblesRemaining > 0)
                 return false;
 
 
-
-            // Need all enemies defeated
 
             if (EnemiesRemaining > 0)
                 return false;
@@ -648,7 +841,6 @@ namespace TheLostRobotStory.World
             return true;
 
         }
-
 
     }
 }
