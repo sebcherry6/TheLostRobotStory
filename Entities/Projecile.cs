@@ -7,89 +7,250 @@ namespace TheLostRobotStory.Entities
 {
     public class Projectile
     {
+
+        // =====================================================
+        // POSITION
+        // =====================================================
+
         public Vector2 Position;
+
         public Vector2 Velocity;
+
+
+
+
+        // =====================================================
+        // STATE
+        // =====================================================
 
         public bool IsDead;
 
+
+        // true = player bullet
+        // false = enemy bullet
         public bool FromPlayer;
 
-        private const float Speed = 10f;
+
+
+        // =====================================================
+        // SETTINGS
+        // =====================================================
+
+        private const float Speed = 300f;
+
         private const int Size = 8;
+
         private const int Damage = 1;
 
-        public Rectangle Bounds =>
-            new Rectangle(
-                (int)Position.X,
-                (int)Position.Y,
-                Size,
-                Size);
 
-        public Projectile(Vector2 startPosition, Vector2 direction, bool fromPlayer = true)
+
+
+
+        // =====================================================
+        // COLLISION
+        // =====================================================
+
+        public Rectangle Bounds
         {
-            Position = startPosition;
-
-            if (direction != Vector2.Zero)
-                direction.Normalize();
-
-            Velocity = direction * Speed;
-
-            FromPlayer = fromPlayer;
-        }
-
-        public void Update(List<Rectangle> solids)
-        {
-            Position += Velocity;
-
-            foreach (Rectangle tile in solids)
+            get
             {
-                if (Bounds.Intersects(tile))
-                {
-                    IsDead = true;
-                    return;
-                }
+                return new Rectangle(
+                    (int)Position.X,
+                    (int)Position.Y,
+                    Size,
+                    Size);
             }
         }
 
-        public bool HitEnemy(Enemy enemy)
+
+
+
+
+
+
+        // =====================================================
+        // CONSTRUCTOR
+        // =====================================================
+
+        public Projectile(
+            Vector2 startPosition,
+            Vector2 direction,
+            bool fromPlayer = true)
         {
+
+            Position =
+                startPosition;
+
+
+
+            FromPlayer =
+                fromPlayer;
+
+
+
+            if (direction != Vector2.Zero)
+            {
+                direction.Normalize();
+            }
+
+
+
+            Velocity =
+                direction * Speed;
+
+        }
+
+
+
+
+
+
+
+
+        // =====================================================
+        // UPDATE
+        // =====================================================
+
+        public void Update(
+            GameTime gameTime,
+            List<Rectangle> solids)
+        {
+
+            float dt =
+                (float)
+                gameTime.ElapsedGameTime.TotalSeconds;
+
+
+
+            Position +=
+                Velocity * dt;
+
+
+
+
+
+            foreach (Rectangle tile in solids)
+            {
+
+                if (Bounds.Intersects(tile))
+                {
+                    IsDead = true;
+
+                    return;
+                }
+
+            }
+
+        }
+
+
+
+
+
+
+
+
+        // =====================================================
+        // HIT ENEMY
+        // =====================================================
+
+        public bool HitEnemy(
+            Enemy enemy)
+        {
+
             if (!FromPlayer)
                 return false;
+
+
 
             if (enemy.IsDead)
                 return false;
 
-            if (!Bounds.Intersects(enemy.Bounds))
+
+
+
+            if (!Bounds.Intersects(
+                enemy.Bounds))
                 return false;
 
-            enemy.TakeDamage(Damage);
+
+
+
+            enemy.TakeDamage(
+                Damage);
+
+
 
             IsDead = true;
 
+
             return true;
+
         }
 
-        public bool HitPlayer(Player player)
+
+
+
+
+
+
+
+        // =====================================================
+        // HIT PLAYER
+        // =====================================================
+
+        public bool HitPlayer(
+            Player player)
         {
+
             if (FromPlayer)
                 return false;
 
-            if (!Bounds.Intersects(player.Bounds))
+
+
+            if (!Bounds.Intersects(
+                player.Bounds))
                 return false;
 
-            player.Health--;
+
+
+
+            player.TakeDamage(
+                Damage);
+
+
 
             IsDead = true;
 
+
+
             return true;
+
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+
+
+
+
+
+
+
+        // =====================================================
+        // DRAW
+        // =====================================================
+
+        public void Draw(
+            SpriteBatch spriteBatch)
         {
+
             spriteBatch.Draw(
                 TextureManager.Pixel,
                 Bounds,
-                FromPlayer ? Color.Yellow : Color.Red);
+                FromPlayer
+                ? Color.Yellow
+                : Color.Red);
+
         }
+
     }
 }

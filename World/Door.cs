@@ -50,12 +50,15 @@ public class Door
     // =========================
     // CALL THIS FROM GAME1
     // =========================
-    public void TryOpen()
+    public bool TryOpen()
     {
         if (!IsActive || !CanOpen)
-            return;
+            return false;
+
 
         IsActive = false;
+
+        return true;
     }
 
     // =========================

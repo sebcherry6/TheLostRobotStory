@@ -5,6 +5,7 @@ using TheLostRobotStory.Core;
 
 namespace TheLostRobotStory.Entities
 {
+
     public enum EnemyType
     {
         Normal,
@@ -14,52 +15,109 @@ namespace TheLostRobotStory.Entities
     }
 
 
+
     public class Enemy : Entity
     {
+
+        // =====================================================
+        // TYPE
+        // =====================================================
+
         public EnemyType Type;
 
 
+
+        // =====================================================
+        // HEALTH
+        // =====================================================
+
         public int Health = 1;
 
-        public bool IsDead => Health <= 0;
 
+        public bool IsDead =>
+            Health <= 0;
+
+
+
+        private float _hitCooldown;
+
+        private float _flashTimer;
+
+
+
+
+
+        // =====================================================
+        // MOVEMENT
+        // =====================================================
 
         protected float _speed;
 
         protected int _direction = 1;
 
 
+        private float _gravity = 1800f;
+
+        private float _maxFallSpeed = 900f;
+
+
+
+
+
+
+        // =====================================================
+        // SHOOTING
+        // =====================================================
+
         protected float _shootTimer = 2f;
 
-
-        protected float _hitCooldown;
-
+        protected float _shootCooldown = 2f;
 
 
-        public Enemy(Vector2 startPos, EnemyType type)
+
+
+
+
+        // =====================================================
+        // CONSTRUCTOR
+        // =====================================================
+
+        public Enemy(
+            Vector2 startPos,
+            EnemyType type)
         {
-            position = startPos;
 
-            size = new Vector2(32, 32);
+            position =
+                startPos;
 
 
-            Type = type;
+            size =
+                new Vector2(
+                    32,
+                    32);
+
+
+
+            Type =
+                type;
 
 
 
             switch (Type)
             {
+
                 case EnemyType.Normal:
 
-                    _speed = 2f;
+                    _speed = 80f;
                     Health = 2;
 
                     break;
 
 
+
                 case EnemyType.Fast:
 
-                    _speed = 4f;
+                    _speed = 140f;
                     Health = 1;
 
                     break;
@@ -68,7 +126,7 @@ namespace TheLostRobotStory.Entities
 
                 case EnemyType.Tank:
 
-                    _speed = 1.5f;
+                    _speed = 50f;
                     Health = 5;
 
                     break;
@@ -77,30 +135,45 @@ namespace TheLostRobotStory.Entities
 
                 case EnemyType.Laser:
 
-                    _speed = 2.5f;
+                    _speed = 70f;
                     Health = 3;
 
                     break;
+
             }
+
         }
 
 
 
-        // =========================
-        // DAMAGE
-        // =========================
 
-        public virtual void TakeDamage(int damage)
+
+
+
+
+        // =====================================================
+        // DAMAGE
+        // =====================================================
+
+        public virtual void TakeDamage(
+            int damage)
         {
 
             if (_hitCooldown > 0)
                 return;
 
 
+
             Health -= damage;
 
 
-            _hitCooldown = 0.15f;
+            _hitCooldown =
+                0.15f;
+
+
+
+            _flashTimer =
+                0.15f;
 
         }
 
@@ -108,11 +181,16 @@ namespace TheLostRobotStory.Entities
 
 
 
-        // =========================
+
+
+
+
+        // =====================================================
         // UPDATE
-        // =========================
+        // =====================================================
 
         public virtual void Update(
+            GameTime gameTime,
             List<Rectangle> solids,
             Player player,
             List<Projectile> projectiles)
@@ -123,67 +201,96 @@ namespace TheLostRobotStory.Entities
 
 
 
+            float dt =
+                (float)
+                gameTime.ElapsedGameTime.TotalSeconds;
+
+
+
             if (_hitCooldown > 0)
-                _hitCooldown -= 1f / 60f;
+                _hitCooldown -= dt;
+
+
+
+            if (_flashTimer > 0)
+                _flashTimer -= dt;
 
 
 
 
-            Move(solids);
+            Move(
+                solids,
+                dt);
 
 
 
             if (Type == EnemyType.Laser)
             {
-                Shoot(player, projectiles);
+
+                Shoot(
+                    player,
+                    projectiles,
+                    dt);
+
             }
+
 
         }
 
 
 
 
-        // =========================
+
+
+
+
+        // =====================================================
         // MOVEMENT
-        // =========================
+        // =====================================================
 
         protected virtual void Move(
-            List<Rectangle> solids)
+            List<Rectangle> solids,
+            float dt)
         {
 
 
+            // horizontal
+
             position.X +=
-                _speed * _direction;
-
-
-
-            Rectangle box = Bounds;
+                _direction *
+                _speed *
+                dt;
 
 
 
             foreach (Rectangle tile in solids)
             {
 
-                if (box.Intersects(tile))
+                if (!Bounds.Intersects(tile))
+                    continue;
+
+
+
+                if (_direction > 0)
                 {
 
-                    if (_direction > 0)
-                    {
-                        position.X =
-                            tile.Left - size.X;
-                    }
-                    else
-                    {
-                        position.X =
-                            tile.Right;
-                    }
+                    position.X =
+                        tile.Left - size.X;
 
-
-
-                    _direction *= -1;
-
-                    break;
                 }
+                else
+                {
+
+                    position.X =
+                        tile.Right;
+
+                }
+
+
+
+                _direction *= -1;
+
+                break;
 
             }
 
@@ -193,43 +300,57 @@ namespace TheLostRobotStory.Entities
 
             // gravity
 
-            velocity.Y += 0.5f;
+            velocity.Y +=
+                _gravity *
+                dt;
 
 
-            position.Y += velocity.Y;
+
+            if (velocity.Y >
+                _maxFallSpeed)
+            {
+                velocity.Y =
+                    _maxFallSpeed;
+            }
 
 
 
-            box = Bounds;
+            position.Y +=
+                velocity.Y *
+                dt;
+
 
 
 
             foreach (Rectangle tile in solids)
             {
 
-                if (box.Intersects(tile))
+                if (!Bounds.Intersects(tile))
+                    continue;
+
+
+
+                if (velocity.Y > 0)
                 {
 
+                    position.Y =
+                        tile.Top -
+                        size.Y;
 
-                    if (velocity.Y > 0)
-                    {
-                        position.Y =
-                            tile.Top - size.Y;
-                    }
-                    else
-                    {
-                        position.Y =
-                            tile.Bottom;
-                    }
+                }
+                else
+                {
 
-
-                    velocity.Y = 0;
-
-                    break;
+                    position.Y =
+                        tile.Bottom;
 
                 }
 
+
+                velocity.Y = 0;
+
             }
+
 
         }
 
@@ -237,44 +358,55 @@ namespace TheLostRobotStory.Entities
 
 
 
-        // =========================
-        // LASER ENEMY SHOOT
-        // =========================
+
+
+
+
+        // =====================================================
+        // SHOOT
+        // =====================================================
 
         protected virtual void Shoot(
             Player player,
-            List<Projectile> projectiles)
+            List<Projectile> projectiles,
+            float dt)
         {
 
-            _shootTimer -= 1f / 60f;
-
-
-            if (_shootTimer <= 0)
-            {
-
-                _shootTimer = 2f;
+            _shootTimer -= dt;
 
 
 
-                Vector2 direction =
-                    player.position - position;
+            if (_shootTimer > 0)
+                return;
 
 
 
-                if (direction != Vector2.Zero)
-                    direction.Normalize();
+            _shootTimer =
+                _shootCooldown;
 
 
 
-                projectiles.Add(
-                    new Projectile(
-                        position +
-                        new Vector2(size.X / 2, size.Y / 2),
-                        direction,
-                        false)
-                );
 
-            }
+            Vector2 direction =
+                player.position -
+                position;
+
+
+
+            if (direction != Vector2.Zero)
+                direction.Normalize();
+
+
+
+
+            projectiles.Add(
+                new Projectile(
+                    position +
+                    new Vector2(
+                        size.X / 2,
+                        size.Y / 2),
+                    direction,
+                    false));
 
         }
 
@@ -282,9 +414,13 @@ namespace TheLostRobotStory.Entities
 
 
 
-        // =========================
+
+
+
+
+        // =====================================================
         // DRAW
-        // =========================
+        // =====================================================
 
         public override void Draw(
             SpriteBatch spriteBatch)
@@ -305,7 +441,8 @@ namespace TheLostRobotStory.Entities
 
                 case EnemyType.Fast:
 
-                    color = Color.Orange;
+                    color =
+                        Color.Orange;
 
                     break;
 
@@ -313,7 +450,8 @@ namespace TheLostRobotStory.Entities
 
                 case EnemyType.Tank:
 
-                    color = Color.DarkRed;
+                    color =
+                        Color.DarkRed;
 
                     break;
 
@@ -321,10 +459,19 @@ namespace TheLostRobotStory.Entities
 
                 case EnemyType.Laser:
 
-                    color = Color.Purple;
+                    color =
+                        Color.Purple;
 
                     break;
 
+            }
+
+
+
+            if (_flashTimer > 0)
+            {
+                color =
+                    Color.White;
             }
 
 
@@ -337,4 +484,5 @@ namespace TheLostRobotStory.Entities
         }
 
     }
+
 }

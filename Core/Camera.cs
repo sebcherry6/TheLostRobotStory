@@ -221,7 +221,14 @@ namespace TheLostRobotStory.Core
 
 
 
-
+        public void Reset(Vector2 position)
+        {
+            Position =
+                -position +
+                new Vector2(
+                    _screenSize.X / 2,
+                    _screenSize.Y / 2);
+        }
 
         public Matrix GetViewMatrix()
         {

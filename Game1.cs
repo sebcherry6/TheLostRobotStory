@@ -81,6 +81,12 @@ namespace TheLostRobotStory
 
         private float _fade;
 
+        private bool _changingLevel;
+
+        private string _pendingLevel;
+
+        private const float FadeSpeed = 2.5f;
+
 
 
 
@@ -220,28 +226,74 @@ namespace TheLostRobotStory
         // =====================================================
 
         protected override void Update(
-            GameTime gameTime)
+    GameTime gameTime)
         {
-
             float dt =
-                (float)
-                gameTime.ElapsedGameTime.TotalSeconds;
+                (float)gameTime.ElapsedGameTime.TotalSeconds;
 
 
 
-
-
+            // ==============================
             // INPUT
+            // ==============================
 
             _inputManager.Update();
 
 
 
-
             if (_inputManager.ExitPressed())
             {
-
                 Exit();
+            }
+
+
+
+
+
+            // ==============================
+            // MESSAGE TIMER
+            // ==============================
+
+            if (_messageTimer > 0)
+            {
+                _messageTimer -= dt;
+
+
+                if (_messageTimer <= 0)
+                {
+                    _messageText = "";
+                }
+            }
+
+
+
+
+
+            // ==============================
+            // GAME UPDATE
+            // ==============================
+
+            _gameManager.Update(
+                gameTime,
+                _inputManager);
+
+
+
+
+
+            // ==============================
+            // LEVEL TRANSITION
+            // ==============================
+
+            if (_gameManager.ChangeLevelRequested &&
+                !_isTransitioning)
+            {
+
+                StartLevelTransition(
+                    _gameManager.NextLevel);
+
+
+                _gameManager.ClearLevelRequest();
 
             }
 
@@ -249,19 +301,59 @@ namespace TheLostRobotStory
 
 
 
-
-            // MESSAGE TIMER
-
-            if (_messageTimer > 0)
+            if (_isTransitioning)
             {
 
-                _messageTimer -= dt;
-
-
-                if (_messageTimer <= 0)
+                if (_changingLevel)
                 {
 
-                    _messageText = "";
+                    _fade += FadeSpeed * dt;
+
+
+
+                    if (_fade >= 1f)
+                    {
+
+                        _fade = 1f;
+
+
+
+                        _gameManager.ChangeLevel(
+                            _pendingLevel);
+
+
+
+                        if (_gameManager.Player != null)
+                        {
+
+                            _camera.Reset(
+                                _gameManager.Player.position);
+
+                        }
+
+
+
+                        _changingLevel = false;
+
+                    }
+
+                }
+
+                else
+                {
+
+                    _fade -= FadeSpeed * dt;
+
+
+
+                    if (_fade <= 0f)
+                    {
+
+                        _fade = 0f;
+
+                        _isTransitioning = false;
+
+                    }
 
                 }
 
@@ -273,16 +365,9 @@ namespace TheLostRobotStory
 
 
 
-            // GAME UPDATE
-
-            _gameManager.Update(
-                gameTime,
-                _inputManager);
-
-
-
-
+            // ==============================
             // CAMERA
+            // ==============================
 
             if (_gameManager.Player != null)
             {
@@ -296,7 +381,9 @@ namespace TheLostRobotStory
 
 
 
+            // ==============================
             // PARTICLES
+            // ==============================
 
             _particles.Update(
                 gameTime);
@@ -313,7 +400,6 @@ namespace TheLostRobotStory
 
             base.Update(
                 gameTime);
-
         }
 
         // =====================================================
@@ -487,6 +573,24 @@ namespace TheLostRobotStory
             // MESSAGE POPUP
             // =====================================================
 
+            if (_gameManager.ActiveDoor != null)
+            {
+                string text =
+                    _gameManager.ActiveDoor.CanOpen
+                    ?
+                    "Press E to enter"
+                    :
+                    "Door locked! Kill all the enemies\n and collect all the crystals to unlock!";
+
+
+
+                _spriteBatch.DrawString(
+                    _uiFont,
+                    text,
+                    new Vector2(300, 150),
+                    Color.White);
+            }
+
             if (!string.IsNullOrEmpty(_messageText))
             {
 
@@ -530,7 +634,7 @@ namespace TheLostRobotStory
 
 
 
-            if (_isTransitioning)
+            if (_fade > 0)
             {
 
                 _spriteBatch.Draw(
@@ -581,7 +685,20 @@ namespace TheLostRobotStory
 
 
 
+        private void StartLevelTransition(string nextLevel)
+        {
+            if (_isTransitioning)
+                return;
 
+
+            _isTransitioning = true;
+
+            _changingLevel = true;
+
+            _pendingLevel = nextLevel;
+
+            _fade = 0f;
+        }
 
 
 

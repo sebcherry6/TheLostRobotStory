@@ -14,11 +14,12 @@ namespace TheLostRobotStory.Entities
         // EVOLUTION
         // =====================================================
 
-        public int EvolutionStage = 0;
+        public int EvolutionStage { get; private set; }
 
-        public bool HasShownShootMessage = false;
 
-        public bool HasShownDoubleJumpMessage = false;
+        public bool HasShownShootMessage;
+
+        public bool HasShownDoubleJumpMessage;
 
 
 
@@ -29,6 +30,7 @@ namespace TheLostRobotStory.Entities
         public int MaxHealth = 3;
 
         public int Health = 3;
+
 
 
 
@@ -47,6 +49,7 @@ namespace TheLostRobotStory.Entities
 
 
 
+
         // =====================================================
         // MOVEMENT
         // =====================================================
@@ -54,11 +57,11 @@ namespace TheLostRobotStory.Entities
         public int FacingDirection = 1;
 
 
-        private float _speed = 220f;
+        private float _speed = 100f;
 
         private float _gravity = 1800f;
 
-        private float _jumpForce = -950f;
+        private float _jumpForce = -850f;
 
         private float _maxFallSpeed = 900f;
 
@@ -70,26 +73,28 @@ namespace TheLostRobotStory.Entities
 
 
 
-        // =====================================================
-        // PLATFORM
-        // =====================================================
-
         private bool _standingOnPlatform;
 
 
 
+
+
         // =====================================================
-        // COYOTE + BUFFER JUMP
+        // JUMP BUFFER / COYOTE TIME
         // =====================================================
 
         private float _coyoteTimer;
 
-        private float _coyoteTime = 0.15f;
+        private readonly float _coyoteTime = 0.15f;
+
 
 
         private float _jumpBufferTimer;
 
-        private float _jumpBufferTime = 0.15f;
+        private readonly float _jumpBufferTime = 0.15f;
+
+
+
 
 
 
@@ -102,7 +107,11 @@ namespace TheLostRobotStory.Entities
 
         private float _attackTimer;
 
-        private float _attackCooldown = 0.25f;
+        private readonly float _attackCooldown = 0.25f;
+
+
+
+
 
 
 
@@ -112,7 +121,10 @@ namespace TheLostRobotStory.Entities
 
         private float _invincibleTimer;
 
-        private float _invincibleDuration = 1f;
+        private readonly float _invincibleDuration = 1f;
+
+
+
 
 
 
@@ -124,22 +136,37 @@ namespace TheLostRobotStory.Entities
 
 
 
+
+
+
+
         // =====================================================
         // CONSTRUCTOR
         // =====================================================
 
-        public Player(Vector2 startPosition)
+        public Player(
+            Vector2 startPosition)
         {
 
-            position = startPosition;
+            position =
+                startPosition;
 
 
-            SpawnPoint = startPosition;
+
+            SpawnPoint =
+                startPosition;
 
 
-            size = new Vector2(
-                32,
-                32);
+
+            size =
+                new Vector2(
+                    32,
+                    32);
+
+
+
+            velocity =
+                Vector2.Zero;
 
 
 
@@ -148,9 +175,23 @@ namespace TheLostRobotStory.Entities
 
 
 
-            SaveCheckpoint();
+
+            _checkpointEvolution =
+                EvolutionStage;
+
+
+
+            _checkpointMaxHealth =
+                MaxHealth;
+
+
+
+            _checkpointHealth =
+                Health;
 
         }
+
+
 
 
 
@@ -175,7 +216,10 @@ namespace TheLostRobotStory.Entities
 
 
 
-            _standingOnPlatform = false;
+
+            _standingOnPlatform =
+                false;
+
 
 
 
@@ -208,8 +252,11 @@ namespace TheLostRobotStory.Entities
 
 
 
+
             _animation.Update(
                 gameTime);
+
+
 
 
 
@@ -220,7 +267,25 @@ namespace TheLostRobotStory.Entities
 
             }
 
+
         }
+
+
+
+
+
+
+
+
+
+
+
+        private void UpdateEvolutionSprite()
+        {
+            // Reserved for animated sprites later
+        }
+
+
 
 
 
@@ -241,7 +306,11 @@ namespace TheLostRobotStory.Entities
 
 
 
-            velocity.X = 0;
+
+            velocity.X =
+                0;
+
+
 
 
 
@@ -252,10 +321,12 @@ namespace TheLostRobotStory.Entities
                     -speed;
 
 
+
                 FacingDirection =
                     -1;
 
             }
+
 
 
 
@@ -266,6 +337,7 @@ namespace TheLostRobotStory.Entities
                     speed;
 
 
+
                 FacingDirection =
                     1;
 
@@ -273,10 +345,14 @@ namespace TheLostRobotStory.Entities
 
 
 
+
+
             position.X +=
                 velocity.X * dt;
 
         }
+
+
 
 
 
@@ -295,15 +371,15 @@ namespace TheLostRobotStory.Entities
             {
 
                 case 1:
-                    return 260f;
+                    return 120f;
 
 
                 case 2:
-                    return 300f;
+                    return 140f;
 
 
                 case 3:
-                    return 340f;
+                    return 160f;
 
 
                 default:
@@ -312,6 +388,7 @@ namespace TheLostRobotStory.Entities
             }
 
         }
+
 
 
 
@@ -330,13 +407,12 @@ namespace TheLostRobotStory.Entities
         {
 
 
-            // Coyote time
-
             if (_grounded)
             {
 
                 _coyoteTimer =
                     _coyoteTime;
+
 
 
                 _doubleJumpUsed =
@@ -346,7 +422,8 @@ namespace TheLostRobotStory.Entities
             else
             {
 
-                _coyoteTimer -= dt;
+                _coyoteTimer -=
+                    dt;
 
             }
 
@@ -354,7 +431,7 @@ namespace TheLostRobotStory.Entities
 
 
 
-            // Jump buffer
+
 
             if (input.JumpPressed())
             {
@@ -366,9 +443,12 @@ namespace TheLostRobotStory.Entities
             else
             {
 
-                _jumpBufferTimer -= dt;
+                _jumpBufferTimer -=
+                    dt;
 
             }
+
+
 
 
 
@@ -379,7 +459,7 @@ namespace TheLostRobotStory.Entities
             {
 
 
-                // Normal jump
+                // normal jump
 
                 if (_coyoteTimer > 0)
                 {
@@ -394,24 +474,24 @@ namespace TheLostRobotStory.Entities
 
 
 
-                    _jumpBufferTimer =
+                    _coyoteTimer =
                         0;
 
 
 
-                    _coyoteTimer =
+                    _jumpBufferTimer =
                         0;
 
                 }
 
 
 
-                // Evolution 2 double jump
 
-                else if (
-                    EvolutionStage >= 2
-                    &&
-                    !_doubleJumpUsed)
+
+                // double jump
+
+                else if (EvolutionStage >= 2 &&
+                        !_doubleJumpUsed)
                 {
 
                     velocity.Y =
@@ -431,7 +511,9 @@ namespace TheLostRobotStory.Entities
 
             }
 
+
         }
+
 
 
 
@@ -443,31 +525,18 @@ namespace TheLostRobotStory.Entities
         // GRAVITY
         // =====================================================
 
-        private void ApplyGravity(
-            float dt)
+        private void ApplyGravity(float dt)
         {
 
-            velocity.Y +=
-                _gravity * dt;
+            velocity.Y += _gravity * dt;
 
 
-
-            if (velocity.Y >
-                _maxFallSpeed)
+            if (velocity.Y > _maxFallSpeed)
             {
-
-                velocity.Y =
-                    _maxFallSpeed;
-
+                velocity.Y = _maxFallSpeed;
             }
 
-
-
-            position.Y +=
-                velocity.Y * dt;
-
         }
-
         // =====================================================
         // SHOOTING
         // =====================================================
@@ -485,11 +554,13 @@ namespace TheLostRobotStory.Entities
             if (input.ShootPressed())
             {
 
-                Shoot(projectiles);
+                Shoot(
+                    projectiles);
 
             }
 
         }
+
 
 
 
@@ -510,7 +581,11 @@ namespace TheLostRobotStory.Entities
 
 
 
-            // Evolution 1
+
+            // =============================
+            // EVOLUTION 1
+            // =============================
+
             if (EvolutionStage == 1)
             {
 
@@ -528,8 +603,10 @@ namespace TheLostRobotStory.Entities
 
 
 
+            // =============================
+            // EVOLUTION 2+
+            // =============================
 
-            // Evolution 2+
             if (EvolutionStage >= 2)
             {
 
@@ -574,7 +651,7 @@ namespace TheLostRobotStory.Entities
 
 
         // =====================================================
-        // ATTACK
+        // ATTACK SYSTEM
         // =====================================================
 
         private void HandleAttack(
@@ -585,16 +662,19 @@ namespace TheLostRobotStory.Entities
             if (_attackTimer > 0)
             {
 
-                _attackTimer -= dt;
+                _attackTimer -=
+                    dt;
 
 
-                IsAttacking = true;
+                IsAttacking =
+                    true;
 
             }
             else
             {
 
-                IsAttacking = false;
+                IsAttacking =
+                    false;
 
             }
 
@@ -625,123 +705,162 @@ namespace TheLostRobotStory.Entities
 
 
         // =====================================================
+        // ATTACK HITBOX
+        // =====================================================
+
+        public Rectangle AttackHitbox
+        {
+
+            get
+            {
+
+                if (!IsAttacking)
+                    return Rectangle.Empty;
+
+
+
+
+
+                if (FacingDirection == 1)
+                {
+
+                    return new Rectangle(
+                        Bounds.Right,
+                        Bounds.Top + 4,
+                        40,
+                        Bounds.Height - 8);
+
+                }
+                else
+                {
+
+                    return new Rectangle(
+                        Bounds.Left - 40,
+                        Bounds.Top + 4,
+                        40,
+                        Bounds.Height - 8);
+
+                }
+
+            }
+
+        }
+
+
+
+
+
+
+
+
+
+
+        // =====================================================
         // SOLID COLLISION
         // =====================================================
 
         public void ApplyCollision(
-            List<Rectangle> solids)
+    List<Rectangle> solids,
+    float dt)
         {
 
             _grounded = false;
 
 
 
-            Rectangle playerBox =
-                Bounds;
+            // ==========================
+            // HORIZONTAL
+            // ==========================
 
+            position.X += velocity.X * dt;
+
+
+
+            Rectangle bounds = Bounds;
+
+
+            foreach (Rectangle tile in solids)
+            {
+
+                if (!bounds.Intersects(tile))
+                    continue;
+
+
+
+                if (velocity.X > 0)
+                {
+                    position.X =
+                        tile.Left - size.X;
+                }
+                else if (velocity.X < 0)
+                {
+                    position.X =
+                        tile.Right;
+                }
+
+
+                velocity.X = 0;
+
+
+                bounds = Bounds;
+
+            }
+
+
+
+
+
+
+            // ==========================
+            // VERTICAL
+            // ==========================
+
+            position.Y += velocity.Y * dt;
+
+
+
+            bounds = Bounds;
 
 
 
             foreach (Rectangle tile in solids)
             {
 
-
-                if (!playerBox.Intersects(tile))
+                if (!bounds.Intersects(tile))
                     continue;
 
 
 
-
-
-                Rectangle overlap =
-                    Rectangle.Intersect(
-                        playerBox,
-                        tile);
-
-
-
-
-
-
-                // Vertical collision
-
-                if (overlap.Height < overlap.Width)
+                if (velocity.Y > 0)
                 {
+                    // landing
+
+                    position.Y =
+                        tile.Top - size.Y;
 
 
-                    // Landing
-
-                    if (position.Y < tile.Top)
-                    {
-
-                        position.Y =
-                            tile.Top - size.Y;
+                    _grounded = true;
 
 
-
-                        velocity.Y = 0;
-
-
-
-                        _grounded = true;
-
-
-
-                        _doubleJumpUsed = false;
-
-                    }
-
-
-
-
-                    // Ceiling
-
-                    else
-                    {
-
-                        position.Y =
-                            tile.Bottom;
-
-
-
-                        velocity.Y = 0;
-
-                    }
+                    _doubleJumpUsed = false;
 
                 }
 
 
-
-
-
-
-                // Horizontal collision
-
-                else
+                else if (velocity.Y < 0)
                 {
+                    // ceiling
 
-                    if (position.X < tile.Left)
-                    {
-
-                        position.X =
-                            tile.Left - size.X;
-
-                    }
-                    else
-                    {
-
-                        position.X =
-                            tile.Right;
-
-                    }
+                    position.Y =
+                        tile.Bottom;
 
                 }
 
 
+                velocity.Y = 0;
 
 
-                playerBox =
-                    Bounds;
+                bounds = Bounds;
 
             }
 
@@ -785,40 +904,41 @@ namespace TheLostRobotStory.Entities
 
 
 
-
-
-                // Player landing on platform
-
-                if (overlap.Height < overlap.Width
-                    &&
-                    velocity.Y >= 0
-                    &&
-                    position.Y < platform.Bounds.Top)
+                if (overlap.Height <
+                   overlap.Width
+                   &&
+                   velocity.Y >= 0
+                   &&
+                   position.Y <
+                   platform.Bounds.Top)
                 {
 
 
                     position.Y =
-                        platform.Bounds.Top - size.Y;
+                        platform.Bounds.Top -
+                        size.Y;
 
 
 
-                    velocity.Y = 0;
+                    velocity.Y =
+                        0;
 
 
 
-                    _grounded = true;
-
-
-                    _doubleJumpUsed = false;
-
-
-
-                    _standingOnPlatform = true;
+                    _grounded =
+                        true;
 
 
 
+                    _doubleJumpUsed =
+                        false;
 
-                    // Move exactly with platform
+
+
+                    _standingOnPlatform =
+                        true;
+
+
 
                     position +=
                         platform.Velocity;
@@ -839,22 +959,22 @@ namespace TheLostRobotStory.Entities
 
 
 
-        // =====================================================
-        // PLATFORM STATE
-        // =====================================================
+
 
         public void SetGrounded(
             bool value)
         {
 
-            _grounded = value;
+            _grounded =
+                value;
 
 
 
             if (value)
             {
 
-                _doubleJumpUsed = false;
+                _doubleJumpUsed =
+                    false;
 
             }
 
@@ -877,12 +997,9 @@ namespace TheLostRobotStory.Entities
 
 
 
-            // IMPORTANT:
-            // Evolution NEVER changes health.
-            // Extra lives stay.
+            // Save progression immediately
 
-            SaveCheckpoint();
-
+            SaveProgression();
 
 
 
@@ -893,7 +1010,6 @@ namespace TheLostRobotStory.Entities
                     false;
 
             }
-
 
 
 
@@ -913,16 +1029,67 @@ namespace TheLostRobotStory.Entities
 
 
 
+
+        // =====================================================
+        // FORCE SET EVOLUTION
+        // USED WHEN CHANGING LEVEL
+        // =====================================================
+
+        public void SetEvolutionStage(
+            int stage)
+        {
+
+            EvolutionStage =
+                stage;
+
+
+
+            SaveProgression();
+
+        }
+
+
+
+
+
+
+
+
+
+
         // =====================================================
         // CHECKPOINT SYSTEM
         // =====================================================
 
+
         public void SaveCheckpoint()
         {
+
 
             SpawnPoint =
                 position;
 
+
+
+
+            SaveProgression();
+
+
+        }
+
+
+
+
+
+
+
+
+        // =====================================================
+        // SAVE PLAYER PROGRESSION
+        // =====================================================
+
+        private void SaveProgression()
+        {
 
 
             // Keep highest evolution
@@ -935,6 +1102,8 @@ namespace TheLostRobotStory.Entities
                     EvolutionStage;
 
             }
+
+
 
 
 
@@ -953,7 +1122,10 @@ namespace TheLostRobotStory.Entities
 
 
 
-            // Keep current health if higher
+
+
+
+            // Keep health
 
             if (Health >
                 _checkpointHealth)
@@ -964,6 +1136,7 @@ namespace TheLostRobotStory.Entities
 
             }
 
+
         }
 
 
@@ -972,8 +1145,15 @@ namespace TheLostRobotStory.Entities
 
 
 
+
+
+        // =====================================================
+        // RESPAWN
+        // =====================================================
+
         public void RespawnAtCheckpoint()
         {
+
 
             position =
                 SpawnPoint;
@@ -982,6 +1162,7 @@ namespace TheLostRobotStory.Entities
 
             velocity =
                 Vector2.Zero;
+
 
 
 
@@ -996,10 +1177,9 @@ namespace TheLostRobotStory.Entities
 
 
 
-            // Respawn with full upgraded health
-
             Health =
                 MaxHealth;
+
 
 
 
@@ -1017,7 +1197,10 @@ namespace TheLostRobotStory.Entities
             _invincibleTimer =
                 _invincibleDuration;
 
+
         }
+
+
 
 
 
@@ -1029,23 +1212,20 @@ namespace TheLostRobotStory.Entities
         // HEALTH SYSTEM
         // =====================================================
 
+
         public void IncreaseHealth()
         {
-
-            // +1 maximum life
 
             MaxHealth++;
 
 
-
-            // Fill new health
 
             Health =
                 MaxHealth;
 
 
 
-            SaveCheckpoint();
+            SaveProgression();
 
         }
 
@@ -1069,44 +1249,42 @@ namespace TheLostRobotStory.Entities
 
 
 
+
         // =====================================================
-        // ATTACK HITBOX
+        // LEVEL TRANSITION SUPPORT
         // =====================================================
 
-        public Rectangle AttackHitbox
+
+        public PlayerData GetPlayerData()
         {
 
-            get
+            return new PlayerData
             {
 
-                if (!IsAttacking)
-                    return Rectangle.Empty;
+                EvolutionStage =
+                    EvolutionStage,
 
 
+                Health =
+                    Health,
 
 
-                if (FacingDirection == 1)
-                {
+                MaxHealth =
+                    MaxHealth,
 
-                    return new Rectangle(
-                        Bounds.Right,
-                        Bounds.Y,
-                        35,
-                        Bounds.Height);
 
-                }
-                else
-                {
+                HasShownShootMessage =
+                    HasShownShootMessage,
 
-                    return new Rectangle(
-                        Bounds.Left - 35,
-                        Bounds.Y,
-                        35,
-                        Bounds.Height);
 
-                }
+                HasShownDoubleJumpMessage =
+                    HasShownDoubleJumpMessage,
 
-            }
+
+                SpawnPoint =
+                    SpawnPoint
+
+            };
 
         }
 
@@ -1114,10 +1292,41 @@ namespace TheLostRobotStory.Entities
 
 
 
+        // =====================================================
+        // LOAD PLAYER DATA
+        // =====================================================
+
+        public void LoadPlayerData(
+            PlayerData data)
+        {
+
+            EvolutionStage =
+                data.EvolutionStage;
 
 
+            Health =
+                data.Health;
 
 
+            MaxHealth =
+                data.MaxHealth;
+
+
+            HasShownShootMessage =
+                data.HasShownShootMessage;
+
+
+            HasShownDoubleJumpMessage =
+                data.HasShownDoubleJumpMessage;
+
+
+            SpawnPoint =
+                data.SpawnPoint;
+
+
+            UpdateEvolutionSprite();
+
+        }
         // =====================================================
         // DAMAGE SYSTEM
         // =====================================================
@@ -1131,6 +1340,7 @@ namespace TheLostRobotStory.Entities
 
 
 
+
             Health -=
                 damage;
 
@@ -1139,9 +1349,11 @@ namespace TheLostRobotStory.Entities
             if (Health < 0)
             {
 
-                Health = 0;
+                Health =
+                    0;
 
             }
+
 
 
 
@@ -1150,6 +1362,9 @@ namespace TheLostRobotStory.Entities
                 _invincibleDuration;
 
 
+
+
+            // knockback
 
             velocity.Y =
                 -350f;
@@ -1163,6 +1378,9 @@ namespace TheLostRobotStory.Entities
 
 
 
+        // =====================================================
+        // ENEMY COLLISION
+        // =====================================================
 
         public void CheckEnemyCollision(
             List<Enemy> enemies)
@@ -1170,6 +1388,7 @@ namespace TheLostRobotStory.Entities
 
             if (_invincibleTimer > 0)
                 return;
+
 
 
 
@@ -1183,9 +1402,11 @@ namespace TheLostRobotStory.Entities
 
 
 
+
                 if (Bounds.Intersects(
                     enemy.Bounds))
                 {
+
 
                     TakeDamage(1);
 
@@ -1193,18 +1414,21 @@ namespace TheLostRobotStory.Entities
 
 
                     if (position.X <
-                        enemy.position.X)
+                       enemy.position.X)
                     {
 
-                        position.X -= 40;
+                        position.X -=
+                            40;
 
                     }
                     else
                     {
 
-                        position.X += 40;
+                        position.X +=
+                            40;
 
                     }
+
 
 
 
@@ -1223,8 +1447,9 @@ namespace TheLostRobotStory.Entities
 
 
 
+
         // =====================================================
-        // DEATH
+        // DEATH SYSTEM
         // =====================================================
 
         public bool IsDead()
@@ -1233,6 +1458,9 @@ namespace TheLostRobotStory.Entities
             return Health <= 0;
 
         }
+
+
+
 
 
 
@@ -1249,6 +1477,7 @@ namespace TheLostRobotStory.Entities
             }
 
         }
+
 
 
 
@@ -1276,6 +1505,7 @@ namespace TheLostRobotStory.Entities
 
 
 
+
         // =====================================================
         // DRAW
         // =====================================================
@@ -1284,10 +1514,12 @@ namespace TheLostRobotStory.Entities
             SpriteBatch spriteBatch)
         {
 
+
             Texture2D texture =
                 TextureManager.Player
                 ??
                 TextureManager.Pixel;
+
 
 
 
@@ -1296,8 +1528,12 @@ namespace TheLostRobotStory.Entities
 
 
 
+
+
+
             switch (EvolutionStage)
             {
+
 
                 case 1:
 
@@ -1305,6 +1541,7 @@ namespace TheLostRobotStory.Entities
                         Color.LightGreen;
 
                     break;
+
 
 
 
@@ -1317,6 +1554,7 @@ namespace TheLostRobotStory.Entities
 
 
 
+
                 case 3:
 
                     color =
@@ -1324,7 +1562,11 @@ namespace TheLostRobotStory.Entities
 
                     break;
 
+
             }
+
+
+
 
 
 
@@ -1337,6 +1579,10 @@ namespace TheLostRobotStory.Entities
                     Color.Orange;
 
             }
+
+
+
+
 
 
 
@@ -1354,6 +1600,9 @@ namespace TheLostRobotStory.Entities
 
 
 
+
+
+
             spriteBatch.Draw(
                 texture,
                 Bounds,
@@ -1361,5 +1610,7 @@ namespace TheLostRobotStory.Entities
 
         }
 
+
     }
 }
+

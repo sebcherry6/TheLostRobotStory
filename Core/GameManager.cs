@@ -18,17 +18,30 @@ namespace TheLostRobotStory.Core
         public Player Player { get; private set; }
 
 
+        public Door ActiveDoor { get; private set; }
+
+
+        public bool ChangeLevelRequested { get; private set; }
+
+
+        public string NextLevel { get; private set; }
+
+
 
 
         // =====================================================
         // MANAGERS
         // =====================================================
 
-        private WorldManager _worldManager;
+        private readonly WorldManager _worldManager;
 
-        private ParticleManager _particles;
+        private readonly ParticleManager _particles;
 
-        private List<Projectile> _projectiles;
+        private readonly List<Projectile> _projectiles;
+
+
+
+        private readonly PlayerData _playerData;
 
 
 
@@ -54,12 +67,13 @@ namespace TheLostRobotStory.Core
             List<Projectile> projectiles)
         {
 
-            _particles =
-                particles;
+            _particles = particles;
+
+            _projectiles = projectiles;
 
 
-            _projectiles =
-                projectiles;
+            _playerData =
+                new PlayerData();
 
 
 
@@ -91,13 +105,23 @@ namespace TheLostRobotStory.Core
 
 
 
+
             Player =
                 new Player(
                     CurrentLevel._spawnPoint);
 
+
+
             Player.SpawnPoint =
-    CurrentLevel._spawnPoint;
+                CurrentLevel._spawnPoint;
+
+
+
+            _playerData.Load(
+                Player);
+
         }
+
 
 
 
@@ -110,13 +134,15 @@ namespace TheLostRobotStory.Core
         // =====================================================
 
         public void Update(
-    GameTime gameTime,
-    InputManager input)
+            GameTime gameTime,
+            InputManager input)
         {
+
 
             if (CurrentLevel == null ||
                 Player == null)
                 return;
+
 
 
 
@@ -127,9 +153,6 @@ namespace TheLostRobotStory.Core
 
 
 
-            // =================================================
-            // ATTACK TIMER
-            // =================================================
 
             if (_attackTimer > 0)
             {
@@ -140,9 +163,9 @@ namespace TheLostRobotStory.Core
 
 
 
-            // =================================================
-            // UPDATE WORLD FIRST
-            // =================================================
+            // ==============================
+            // WORLD
+            // ==============================
 
             _worldManager.Update(
                 gameTime,
@@ -153,9 +176,10 @@ namespace TheLostRobotStory.Core
 
 
 
-            // =================================================
+
+            // ==============================
             // PLAYER
-            // =================================================
+            // ==============================
 
             Player.Update(
                 gameTime,
@@ -168,13 +192,9 @@ namespace TheLostRobotStory.Core
 
 
 
-
-            // =================================================
-            // COLLISION
-            // =================================================
-
             Player.ApplyCollision(
-                CurrentLevel._solids);
+                CurrentLevel._solids,
+                (float)gameTime.ElapsedGameTime.TotalSeconds);
 
 
 
@@ -187,21 +207,20 @@ namespace TheLostRobotStory.Core
 
 
 
-            // =================================================
+            // ==============================
             // COLLECTIBLES
-            // =================================================
+            // ==============================
 
             foreach (var collectible in CurrentLevel._collectibles)
             {
 
                 if (!collectible.IsCollected &&
-                   Player.Bounds.Intersects(
-                   collectible.Bounds))
+                    Player.Bounds.Intersects(
+                    collectible.Bounds))
                 {
 
                     collectible.Collect(
                         Player);
-
 
 
                     _particles.SpawnExplosion(
@@ -218,71 +237,76 @@ namespace TheLostRobotStory.Core
 
 
 
+            // ==============================
+            // DOORS
+            // ==============================
 
-            // =================================================
-            // HEALTH UPGRADES
-            // =================================================
 
-            foreach (var upgrade in CurrentLevel._healthUpgrades)
+            bool cleared =
+                CurrentLevel.IsCleared();
+
+
+
+            foreach (var door in CurrentLevel._doors)
             {
 
-                if (!upgrade.IsCollected &&
-                   Player.Bounds.Intersects(
-                   upgrade.Bounds))
-                {
-
-                    upgrade.Collect(
-                        Player);
+                door.CanOpen =
+                    cleared;
 
 
 
-                    Player.IncreaseHealth();
+                door.IsPlayerNear =
+                    Player.Bounds.Intersects(
+                        door.Bounds);
 
 
 
-                    _particles.SpawnExplosion(
-                        upgrade.Position,
-                        Color.Red);
-
-                }
+                door.Update(
+                    gameTime);
 
             }
 
 
 
 
+            ActiveDoor = null;
 
 
 
 
-            // =================================================
-            // EVOLUTION CORES
-            // =================================================
-
-            foreach (var core in CurrentLevel._evolutionCores)
+            foreach (var door in CurrentLevel._doors)
             {
 
-                if (!core.Collected &&
-                   Player.Bounds.Intersects(
-                   core.Bounds))
+                if (Player.Bounds.Intersects(
+                    door.Bounds))
                 {
 
-                    int oldStage =
-                        Player.EvolutionStage;
+                    ActiveDoor =
+                        door;
 
 
 
-                    core.Collect(
-                        Player);
-
-
-
-                    if (Player.EvolutionStage > oldStage)
+                    if (door.CanOpen &&
+                       input.InteractPressed())
                     {
 
-                        _particles.SpawnExplosion(
-                            core.Position,
-                            Color.Cyan);
+
+                        _playerData.Save(
+                            Player);
+
+
+
+                        ChangeLevelRequested =
+                            true;
+
+
+
+                        NextLevel =
+                            door.DestinationLevel;
+
+
+
+                        break;
 
                     }
 
@@ -297,12 +321,50 @@ namespace TheLostRobotStory.Core
 
 
 
+            // ==============================
+            // EVOLUTION
+            // ==============================
 
-            // =================================================
+            foreach (var core in CurrentLevel._evolutionCores)
+            {
+                core.Update(gameTime);
+
+
+                if (!core.Collected &&
+                   Player.Bounds.Intersects(core.Bounds))
+                {
+
+                    int oldStage =
+                        Player.EvolutionStage;
+
+
+                    core.Collect(Player);
+
+
+                    if (Player.EvolutionStage > oldStage)
+                    {
+                        _particles.SpawnExplosion(
+                            core.Position,
+                            Color.Cyan);
+                    }
+
+                }
+            }
+
+
+
+
+
+
+
+
+            // ==============================
             // ENEMIES
-            // =================================================
+            // ==============================
 
-            for (int i = CurrentLevel._enemies.Count - 1;
+
+            for (int i =
+                CurrentLevel._enemies.Count - 1;
                 i >= 0;
                 i--)
             {
@@ -326,6 +388,7 @@ namespace TheLostRobotStory.Core
                 {
 
                     enemy.Update(
+                        gameTime,
                         CurrentLevel._solids,
                         Player,
                         _projectiles);
@@ -336,9 +399,6 @@ namespace TheLostRobotStory.Core
 
 
 
-
-                // PLAYER ATTACK
-
                 if (Player.AttackHitbox.Intersects(
                     enemy.Bounds))
                 {
@@ -346,12 +406,12 @@ namespace TheLostRobotStory.Core
                     if (_attackTimer <= 0)
                     {
 
-                        enemy.TakeDamage(1);
+                        enemy.TakeDamage(
+                            1);
 
 
                         _attackTimer =
                             AttackCooldown;
-
 
 
                         _particles.SpawnExplosion(
@@ -375,7 +435,8 @@ namespace TheLostRobotStory.Core
 
 
 
-                    CurrentLevel._enemies.RemoveAt(i);
+                    CurrentLevel._enemies.RemoveAt(
+                        i);
 
                 }
 
@@ -388,14 +449,14 @@ namespace TheLostRobotStory.Core
 
 
 
-
-            // =================================================
+            // ==============================
             // PROJECTILES
-            // =================================================
+            // ==============================
+
 
             for (int i = _projectiles.Count - 1;
-                i >= 0;
-                i--)
+    i >= 0;
+    i--)
             {
 
                 Projectile projectile =
@@ -404,29 +465,60 @@ namespace TheLostRobotStory.Core
 
 
                 projectile.Update(
+                    gameTime,
                     CurrentLevel._solids);
 
 
 
-
-
-                foreach (var enemy in CurrentLevel._enemies)
+                if (projectile.FromPlayer)
                 {
 
-                    projectile.HitEnemy(
-                        enemy);
+                    foreach (var enemy in CurrentLevel._enemies)
+                    {
+                        projectile.HitEnemy(enemy);
+                    }
+
+                }
+                else
+                {
+
+                    projectile.HitPlayer(
+                        Player);
 
                 }
 
 
 
-
-
-
                 if (projectile.IsDead)
                 {
-
                     _projectiles.RemoveAt(i);
+                }
+
+            }
+
+
+            // =================================================
+            // HEALTH UPGRADES
+            // =================================================
+
+            foreach (var upgrade in CurrentLevel._healthUpgrades)
+            {
+
+                upgrade.Update(gameTime);
+
+
+
+                if (!upgrade.IsCollected &&
+                    Player.Bounds.Intersects(upgrade.Bounds))
+                {
+
+                    upgrade.Collect(Player);
+
+
+
+                    _particles.SpawnExplosion(
+                        upgrade.Position,
+                        Color.Red);
 
                 }
 
@@ -435,13 +527,6 @@ namespace TheLostRobotStory.Core
 
 
 
-
-
-
-
-            // =================================================
-            // DAMAGE + DEATH
-            // =================================================
 
             Player.CheckEnemyCollision(
                 CurrentLevel._enemies);
@@ -451,6 +536,7 @@ namespace TheLostRobotStory.Core
             Player.CheckDeath();
 
         }
+
 
 
 
@@ -483,7 +569,6 @@ namespace TheLostRobotStory.Core
 
 
 
-
             foreach (var projectile in _projectiles)
             {
 
@@ -501,18 +586,49 @@ namespace TheLostRobotStory.Core
 
 
 
+
         // =====================================================
-        // LEVEL CHANGE
+        // CHANGE LEVEL
         // =====================================================
 
         public void ChangeLevel(
-            string levelName)
+    string levelName)
         {
 
-            LoadGame(
+            PlayerData data =
+                Player.GetPlayerData();
+
+
+
+            _worldManager.LoadLevel(
                 levelName);
 
+
+
+            CurrentLevel =
+                _worldManager.CurrentLevel;
+
+
+
+            Player.position =
+                CurrentLevel._spawnPoint;
+
+
+
+            Player.LoadPlayerData(
+                data);
+
+
+
+            Player.SpawnPoint =
+                CurrentLevel._spawnPoint;
+
+
+
+            _projectiles.Clear();
+
         }
+
 
 
 
@@ -537,11 +653,21 @@ namespace TheLostRobotStory.Core
 
 
 
+        public void ClearLevelRequest()
+        {
+
+            ChangeLevelRequested =
+                false;
 
 
-        // =====================================================
-        // ACCESS
-        // =====================================================
+            NextLevel =
+                null;
+
+        }
+
+
+
+
 
         public bool HasLevelLoaded()
         {
