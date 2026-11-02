@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using TheLostRobotStory.Core;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 
@@ -30,6 +31,11 @@ namespace TheLostRobotStory.Entities
         // =====================================================
         // COLLIDER
         // =====================================================
+
+        public Vector2 Center => position + size / 2f;
+
+        // what the object looks like now (pixel-perfect hits); default = its rectangle
+        public virtual SpriteShape GetShape() => SpriteShape.FromRect(Bounds);
 
         public virtual Rectangle Bounds
         {

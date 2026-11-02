@@ -70,6 +70,16 @@ namespace TheLostRobotStory.World
 
         private const int Size = 32;
 
+        // set by Level from levels.json (green acid, molten metal...)
+        public static Color Tint = Color.LimeGreen;
+
+        // acid.png: frames of 32x64 -> top half = surface, bottom half = deep liquid.
+        // Level picks "acid_<level>.png" when it exists (e.g. molten metal).
+        public static Texture2D Sheet;
+
+        // false when another acid tile sits on top (draws the deep part)
+        public bool IsSurface = true;
+
 
 
 
@@ -158,7 +168,7 @@ namespace TheLostRobotStory.World
 
                 _particles.SpawnBubble(
                     bubblePosition,
-                    Color.LimeGreen);
+                    Tint);
 
             }
 
@@ -173,7 +183,7 @@ namespace TheLostRobotStory.World
             // PLAYER DAMAGE
             // =================================================
 
-            if (player.Bounds.Intersects(Bounds))
+            if (PixelCollision.Overlaps(player.GetShape(), GetShape()))
             {
 
                 if (_damageTimer <= 0)
@@ -193,7 +203,7 @@ namespace TheLostRobotStory.World
 
                     _particles.SpawnExplosion(
                         player.position,
-                        Color.GreenYellow);
+                        Tint);
 
 
 
@@ -234,9 +244,36 @@ namespace TheLostRobotStory.World
         // DRAW
         // =====================================================
 
+        private Rectangle SourceRect(Texture2D sheet)
+        {
+            int frame = Sprites.AnimFrame(sheet, Size, 5f);
+            bool twoRows = sheet.Height >= Size * 2;
+            int row = twoRows && !IsSurface ? 1 : 0;
+
+            return new Rectangle(frame * Size, row * Size, Size, twoRows ? Size : sheet.Height);
+        }
+
+        public SpriteShape GetShape()
+        {
+            Texture2D sheet = Sheet ?? TextureManager.Acid;
+
+            return sheet == null
+                ? SpriteShape.FromRect(Bounds)
+                : SpriteShape.FromTexture(sheet, SourceRect(sheet), Bounds);
+        }
+
         public void Draw(
             SpriteBatch spriteBatch)
         {
+            Texture2D sheet = Sheet ?? TextureManager.Acid;
+
+            if (sheet != null)
+            {
+                // every tile shares one clock so a pool moves as one surface
+                spriteBatch.Draw(sheet, Bounds, SourceRect(sheet), Color.White);
+                return;
+            }
+
 
             Rectangle drawArea =
                 new Rectangle(
@@ -251,7 +288,7 @@ namespace TheLostRobotStory.World
             spriteBatch.Draw(
                 TextureManager.Pixel,
                 drawArea,
-                Color.LimeGreen);
+                Tint);
 
         }
 

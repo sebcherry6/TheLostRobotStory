@@ -155,6 +155,25 @@ namespace TheLostRobotStory.Entities
             if (Collected)
                 return;
 
+            if (TextureManager.EvolutionCore != null)
+            {
+                Rectangle dest = Bounds;
+                dest.Y += (int)(Math.Sin(_time * 3f) * 5f);
+
+                Rectangle source = Sprites.FrameRect(
+                    TextureManager.EvolutionCore,
+                    Sprites.AnimFrame(TextureManager.EvolutionCore, 32, 7f),
+                    32);
+
+                float haloPulse = 0.5f + (float)Math.Sin(_time * 6f) * 0.3f;
+
+                TheLostRobotStory.World.Beacon.Draw(spriteBatch, dest, Color.Cyan, _time);
+
+                Sprites.DrawOutline(spriteBatch, TextureManager.EvolutionCore, dest, source, Color.Cyan * haloPulse, SpriteEffects.None, 2);
+                spriteBatch.Draw(TextureManager.EvolutionCore, dest, source, Color.White);
+                return;
+            }
+
 
 
             float floatOffset =

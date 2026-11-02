@@ -66,6 +66,15 @@ public class Door
     // =========================
     public void Draw(SpriteBatch spriteBatch)
     {
+            // door.png: 2 frames of 64x96 -> 0 = sealed, 1 = unlocked
+            if (TextureManager.Door != null)
+            {
+                float pulse = IsPlayerNear ? 0.85f + (float)System.Math.Sin(_glowTimer) * 0.15f : 1f;
+
+                Sprites.DrawFrame(spriteBatch, TextureManager.Door, Bounds, CanOpen ? 1 : 0, Color.White * pulse, 64);
+                return;
+            }
+
         float glow = 1f;
 
         if (IsPlayerNear)

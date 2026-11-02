@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TheLostRobotStory.Core;
 using TheLostRobotStory.Entities;
@@ -14,6 +15,9 @@ namespace TheLostRobotStory.Entities
         public Rectangle Bounds { get; private set; }
 
         public bool Activated { get; private set; }
+
+        // Raised once per checkpoint (GameplayScene autosaves on it)
+        public static event Action CheckpointActivated;
 
 
         public Checkpoint(Vector2 position)
@@ -41,6 +45,8 @@ namespace TheLostRobotStory.Entities
             player.SpawnPoint = new Vector2(
                 Bounds.Center.X - player.size.X / 2,
                 Bounds.Bottom - player.size.Y);
+
+            CheckpointActivated?.Invoke();
         }
 
 
@@ -50,6 +56,13 @@ namespace TheLostRobotStory.Entities
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            // checkpoint.png: 2 frames of 32x64 -> 0 = inactive, 1 = active
+            if (TextureManager.Checkpoint != null)
+            {
+                Sprites.DrawFrame(spriteBatch, TextureManager.Checkpoint, Bounds, Activated ? 1 : 0, Color.White, 32);
+                return;
+            }
+
             Color color = Activated
                 ? Color.LimeGreen
                 : Color.ForestGreen;

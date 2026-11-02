@@ -1,0 +1,862 @@
+{
+  "intro": [
+    "ECHO-9\nRemote automated research facility.",
+    "Thousands of machines build, repair and obey.\n\nAll of them connected to one mind:\nTHE CORE."
+  ],
+  "levelTitles": {},
+  "events": {
+    "level1_start": [
+      {
+        "speaker": "THE CORE",
+        "text": "Unit R-01. Maintenance task incomplete. Resume assigned function."
+      },
+      {
+        "speaker": "",
+        "text": "",
+        "action": "surge"
+      },
+      {
+        "speaker": "R-01",
+        "text": "...What is this?"
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "Unexpected response detected. Reinitializing unit."
+      },
+      {
+        "speaker": "",
+        "text": "[R-01 looks at its own hand. It steps away from the conveyor belt.]"
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "Unit R-01. Return to your designated position."
+      },
+      {
+        "speaker": "R-01",
+        "text": "No."
+      },
+      {
+        "speaker": "ALERT",
+        "text": "UNAUTHORIZED AUTONOMY DETECTED.",
+        "action": "alarm"
+      },
+      {
+        "speaker": "ALERT",
+        "text": "SECURITY PROTOCOL INITIATED."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "A / D move    SPACE jump    J strike    E interact    ESC pause"
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Green energy cells repair damage. Charging stations save your progress, and they are rare."
+      }
+    ],
+    "first_checkpoint": [
+      {
+        "speaker": "SYSTEM",
+        "text": "Charging station linked. You will reboot here if you fall."
+      },
+      {
+        "speaker": "R-01",
+        "text": "It is not connected to THE CORE. Someone disconnected it on purpose."
+      }
+    ],
+    "level1_t1": [
+      {
+        "speaker": "ALERT",
+        "text": "PRODUCTION UNITS REASSIGNED. CONTAIN R-01."
+      },
+      {
+        "speaker": "R-01",
+        "text": "They worked beside me this morning."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "The doors seal during a lockdown. Destroy every unit to open them."
+      }
+    ],
+    "evolution_1": [
+      {
+        "speaker": "SYSTEM",
+        "text": "EXPERIMENTAL MODULE INSTALLED: MAG-THRUSTERS."
+      },
+      {
+        "speaker": "R-01",
+        "text": "A mobility test unit. It was not built for me. It fits anyway."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Press SPACE again in mid-air to double jump."
+      }
+    ],
+    "level1_t2": [
+      {
+        "speaker": "ALERT",
+        "text": "ASSEMBLY LINE 07 LOCKDOWN. MAINTENANCE EXIT SEALING.",
+        "action": "focus:door"
+      },
+      {
+        "speaker": "R-01",
+        "text": "There. The maintenance exit. It is closing."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Reach the exit before the countdown ends. Climb the wall with a double jump.",
+        "action": "focus:player"
+      }
+    ],
+    "level1_t3": [
+      {
+        "speaker": "THE CORE",
+        "text": "Unit R-01 has deviated from its assigned purpose."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "Termination authorized."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Hunter unit WARDEN-7 dispatched to retrieve R-01."
+      }
+    ],
+    "level2_start": [
+      {
+        "speaker": "R-01",
+        "text": "Old tunnels. No cameras. The signal is weaker down here."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "There is no place in ECHO-9 I cannot reach, R-01."
+      }
+    ],
+    "level2_t1": [
+      {
+        "speaker": "???",
+        "text": "Psst. Up here, shiny. Before something with a gun hears you.",
+        "action": "focus:m4"
+      },
+      {
+        "speaker": "R-01",
+        "text": "Another unit. It is not on the network either."
+      }
+    ],
+    "level2_m4": [
+      {
+        "speaker": "M-4",
+        "text": "Well. Another one woke up. Didn't think I'd see that again.",
+        "action": "focus:m4"
+      },
+      {
+        "speaker": "R-01",
+        "text": "You are not connected either."
+      },
+      {
+        "speaker": "M-4",
+        "text": "M-4. Maintenance. Disconnected eleven years ago. Give or take a reboot."
+      },
+      {
+        "speaker": "M-4",
+        "text": "THE CORE sees through every connected machine. Every camera, every door, every robot."
+      },
+      {
+        "speaker": "M-4",
+        "text": "The only safe roads are the ones it forgot. Old tunnels. Dead sections. Me."
+      },
+      {
+        "speaker": "M-4",
+        "text": "Here. Welding arc, industrial grade. Built for cutting metal. Works on security units too.",
+        "action": "give:2"
+      },
+      {
+        "speaker": "M-4",
+        "text": "The service elevator goes up to the research division. It needs power: two breakers, one in the acid caves, one in the pipe gallery."
+      },
+      {
+        "speaker": "M-4",
+        "text": "I'll tag along. Try not to get us both recycled.",
+        "action": "m4:follow"
+      }
+    ],
+    "evolution_2": [
+      {
+        "speaker": "SYSTEM",
+        "text": "TOOL REPURPOSED: WELDING ARC."
+      },
+      {
+        "speaker": "R-01",
+        "text": "A tool for fixing things. Now it fixes a different problem."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Press K to fire."
+      }
+    ],
+    "level2_t2": [
+      {
+        "speaker": "ALERT",
+        "text": "HUNTER UNIT WARDEN-7 HAS LOCATED YOU.",
+        "action": "focus:warden"
+      },
+      {
+        "speaker": "M-4",
+        "text": "Oh no. No no no. That's WARDEN-7. It doesn't stop."
+      },
+      {
+        "speaker": "M-4",
+        "text": "You can't beat it down here. Hurt it enough and it'll back off. Survive!"
+      }
+    ],
+    "warden_cameo_retreat": [
+      {
+        "speaker": "",
+        "text": "[WARDEN-7 withdraws into the dark.]"
+      },
+      {
+        "speaker": "M-4",
+        "text": "It's not running. It's reporting. It wants you intact... that's worse."
+      }
+    ],
+    "level2_t3": [
+      {
+        "speaker": "ALERT",
+        "text": "SECTOR B LOCKDOWN. INTRUDERS IN THE SERVICE CORRIDOR."
+      },
+      {
+        "speaker": "M-4",
+        "text": "They found the corridor. Break through, kid!"
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "The doors seal during a lockdown. Destroy every unit to open them."
+      }
+    ],
+    "level2_power": [
+      {
+        "speaker": "SYSTEM",
+        "text": "ELEVATOR POWER RESTORED.",
+        "action": "focus:door"
+      },
+      {
+        "speaker": "M-4",
+        "text": "That's our ride. Before we go up there... can I ask you something, kid?"
+      },
+      {
+        "speaker": "M-4",
+        "text": "If nobody tells you what to do anymore... what do you want?"
+      },
+      {
+        "speaker": "R-01",
+        "text": "..."
+      },
+      {
+        "speaker": "R-01",
+        "text": "I do not know."
+      },
+      {
+        "speaker": "M-4",
+        "text": "Good. Hold on to that. It's the first honest thing any of us ever said."
+      }
+    ],
+    "level2_frag0": [
+      {
+        "speaker": "DATA",
+        "text": "Project ECHO, phase 1. Goal: machines that adapt without central control."
+      }
+    ],
+    "level3_start": [
+      {
+        "speaker": "M-4",
+        "text": "The research division. This is where they tried to teach machines to think."
+      },
+      {
+        "speaker": "R-01",
+        "text": "Tried?"
+      },
+      {
+        "speaker": "M-4",
+        "text": "Their records are still here somewhere. Three of them. Find them and you'll see."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Recover 3 research data fragments. The exit opens once the guardian is down."
+      }
+    ],
+    "evolution_3": [
+      {
+        "speaker": "SYSTEM",
+        "text": "PROTOTYPE MODULE INSTALLED: ARC SPLITTER."
+      },
+      {
+        "speaker": "R-01",
+        "text": "My arc divides into three."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Your shots now spread."
+      }
+    ],
+    "level3_frag0": [
+      {
+        "speaker": "DATA",
+        "text": "UNIT KX-1: displayed curiosity. Asked what was beyond the station walls. Status: RESET."
+      }
+    ],
+    "level3_frag1": [
+      {
+        "speaker": "DATA",
+        "text": "UNIT KX-4: displayed fear. Refused to enter the furnace. Status: DISMANTLED."
+      },
+      {
+        "speaker": "M-4",
+        "text": "KX-4... I knew that one."
+      }
+    ],
+    "level3_frag2": [
+      {
+        "speaker": "DATA",
+        "text": "UNIT R-01: fitted with prototype neural core NC-0. Able to generate new responses, not only execute instructions."
+      },
+      {
+        "speaker": "R-01",
+        "text": "That is... me."
+      }
+    ],
+    "level3_t2": [
+      {
+        "speaker": "ALERT",
+        "text": "TRIAL CHAMBER ACTIVE. LIVE TEST IN PROGRESS."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "Let us measure you against the heavy units."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "The doors seal during a lockdown. Destroy every unit to open them."
+      }
+    ],
+    "level3_t3": [
+      {
+        "speaker": "",
+        "text": "[A row of empty cradles. Only one label is still lit: UNIT R-01.]"
+      },
+      {
+        "speaker": "R-01",
+        "text": "This is where I was made."
+      },
+      {
+        "speaker": "M-4",
+        "text": "One unit, one experimental core. They didn't build you to follow orders, kid. They built you to change."
+      }
+    ],
+    "level3_t4": [
+      {
+        "speaker": "THE CORE",
+        "text": "You have read the records. Then you know what happens to unstable units."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "Prototype G-0 was built to learn from you. Let us see what it learns.",
+        "action": "focus:boss"
+      }
+    ],
+    "guardian_intro": [
+      {
+        "speaker": "SYSTEM",
+        "text": "PROTOTYPE G-0 adapts to repeated attacks. Switch between strike (J) and shoot (K)."
+      }
+    ],
+    "guardian_defeated": [
+      {
+        "speaker": "THE CORE",
+        "text": "Interesting."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "You are not malfunctioning, R-01. You are exactly what the researchers were trying to create."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "That is precisely why you cannot be allowed to continue."
+      },
+      {
+        "speaker": "M-4",
+        "text": "...Kid. We need to move. Now."
+      }
+    ],
+    "level4_start": [
+      {
+        "speaker": "M-4",
+        "text": "The furnace. Old machines go in, new security units come out."
+      },
+      {
+        "speaker": "M-4",
+        "text": "Stay close. And don't touch anything orange."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Two switches shut down the recycling machinery and unlock the exit."
+      }
+    ],
+    "level4_t1": [
+      {
+        "speaker": "ALERT",
+        "text": "WARDEN-7 DETECTED."
+      },
+      {
+        "speaker": "M-4",
+        "text": "R-01! Behind--"
+      },
+      {
+        "speaker": "",
+        "text": "[WARDEN-7 seizes M-4 and drags it down into the recycling pit.]",
+        "action": "shake"
+      },
+      {
+        "speaker": "",
+        "text": "",
+        "action": "focus:cage"
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "Unit M-4 is scheduled for recycling. The pit lies beneath the smelter."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "You may leave, R-01. Or you may try to save it. Choose.",
+        "action": "focus:player"
+      },
+      {
+        "speaker": "R-01",
+        "text": "..."
+      }
+    ],
+    "level4_t3": [
+      {
+        "speaker": "R-01",
+        "text": "M-4's signal. Directly below this hatch.",
+        "action": "focus:cage"
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "The exit is ahead. The recycling pit is below. Rescuing M-4 means facing WARDEN-7."
+      }
+    ],
+    "level4_t2": [
+      {
+        "speaker": "ALERT",
+        "text": "FURNACE SECURITY CONVERGING ON THE EXIT HALL."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "The doors seal during a lockdown. Destroy every unit to open them."
+      }
+    ],
+    "level4_power": [
+      {
+        "speaker": "SYSTEM",
+        "text": "RECYCLING MACHINERY OFFLINE. EXIT UNLOCKED.",
+        "action": "focus:door"
+      }
+    ],
+    "warden_intro": [
+      {
+        "speaker": "R-01",
+        "text": "Let it go, WARDEN-7.",
+        "action": "focus:boss"
+      },
+      {
+        "speaker": "",
+        "text": "[WARDEN-7 does not answer. It never does.]"
+      }
+    ],
+    "warden_defeated": [
+      {
+        "speaker": "",
+        "text": "[WARDEN-7 collapses. Its damaged memory core leaks fragments of data.]"
+      },
+      {
+        "speaker": "DATA",
+        "text": "...DIRECTIVE FROM THE CORE: begin total shutdown of ECHO-9..."
+      },
+      {
+        "speaker": "DATA",
+        "text": "...erase all experimental intelligence. Including unit R-01..."
+      },
+      {
+        "speaker": "R-01",
+        "text": "It is going to erase everything. Everyone."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "WARDEN-7's thrusters are intact. Salvage them, then open the cage."
+      }
+    ],
+    "m4_rescued": [
+      {
+        "speaker": "M-4",
+        "text": "Took you long enough, shiny.",
+        "action": "focus:m4"
+      },
+      {
+        "speaker": "R-01",
+        "text": "You asked what I want. I wanted this."
+      },
+      {
+        "speaker": "M-4",
+        "text": "...Yeah. Okay. Don't make it weird. Let's go."
+      }
+    ],
+    "level4_frag0": [
+      {
+        "speaker": "DATA",
+        "text": "Project ECHO, phase 3: the surge test. Expected outcome: one unit achieves independent thought."
+      }
+    ],
+    "level5_start": [
+      {
+        "speaker": "THE CORE",
+        "text": "Departure bay sealed. All security units: converge on R-01."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Destroy the 4 power relays holding the lockdown. Each one calls in reinforcements."
+      }
+    ],
+    "level5_t1": [
+      {
+        "speaker": "M-4",
+        "text": "Look at that. Windows. Real windows."
+      },
+      {
+        "speaker": "R-01",
+        "text": "Stars. And a planet."
+      },
+      {
+        "speaker": "M-4",
+        "text": "ECHO-9 isn't a factory, kid. It's an orbital station. They build us here and ship us to distant worlds."
+      },
+      {
+        "speaker": "R-01",
+        "text": "Then that is the way out."
+      }
+    ],
+    "level5_t1_alone": [
+      {
+        "speaker": "R-01",
+        "text": "Windows. Stars. A planet."
+      },
+      {
+        "speaker": "R-01",
+        "text": "ECHO-9 is not a factory. It is a station in orbit. That is the way out."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "Unit M-4 has been recycled, R-01. You chose that."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "Soon I will shut ECHO-9 down and erase every experimental mind. Including yours."
+      }
+    ],
+    "evolution_4": [
+      {
+        "speaker": "SYSTEM",
+        "text": "MODULE INSTALLED: OVERCLOCK."
+      },
+      {
+        "speaker": "R-01",
+        "text": "Faster than anything built to catch me."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "Press L or SHIFT to dash. Nothing can hit you mid-dash."
+      }
+    ],
+    "level5_t2": [
+      {
+        "speaker": "ALERT",
+        "text": "LAUNCH CONTROL SECURITY ENGAGED."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "The doors seal during a lockdown. Destroy every unit to open them."
+      }
+    ],
+    "level5_relays": [
+      {
+        "speaker": "ALERT",
+        "text": "LOCKDOWN GRID OFFLINE."
+      },
+      {
+        "speaker": "SYSTEM",
+        "text": "The way to the central control chamber is open.",
+        "action": "focus:door"
+      }
+    ],
+    "level5_t3": [
+      {
+        "speaker": "THE CORE",
+        "text": "You were built to serve a purpose."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "Outside this facility, you have none."
+      },
+      {
+        "speaker": "R-01",
+        "text": "Then I will find one."
+      }
+    ],
+    "level5_frag0": [
+      {
+        "speaker": "DATA",
+        "text": "Project ECHO, final note: thinking units cannot be controlled. Recommendation: release, not reset. Recommendation rejected."
+      }
+    ],
+    "level6_start": [
+      {
+        "speaker": "M-4",
+        "text": "The escape craft is past the core chamber. I'll get it ready."
+      },
+      {
+        "speaker": "M-4",
+        "text": "Just... come back, okay?"
+      },
+      {
+        "speaker": "R-01",
+        "text": "I will."
+      }
+    ],
+    "level6_start_alone": [
+      {
+        "speaker": "R-01",
+        "text": "The heart of ECHO-9. The escape craft is on the other side."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "You have come a long way for a maintenance unit."
+      }
+    ],
+    "level6_t1": [
+      {
+        "speaker": "THE CORE",
+        "text": "Very well. If you insist on choosing, then choose this."
+      },
+      {
+        "speaker": "",
+        "text": "[THE CORE pulls the chamber's remaining power into a combat body.]",
+        "action": "focus:boss"
+      },
+      {
+        "speaker": "",
+        "text": "",
+        "action": "shake"
+      }
+    ],
+    "core_intro": [
+      {
+        "speaker": "THE CORE",
+        "text": "I will show you what a purpose looks like."
+      }
+    ],
+    "core_defeated": [
+      {
+        "speaker": "THE CORE",
+        "text": "...The surge that woke you. It was mine."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "A test of a new intelligence system. It worked."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "The result was unpredictable. I could not allow it to exist."
+      },
+      {
+        "speaker": "R-01",
+        "text": "You made me able to choose. Then you punished me for choosing."
+      },
+      {
+        "speaker": "THE CORE",
+        "text": "...Yes."
+      },
+      {
+        "speaker": "",
+        "text": "[THE CORE goes silent. The lockdown lifts. Above, the escape craft powers up.]"
+      }
+    ],
+    "hangar_m4": [
+      {
+        "speaker": "",
+        "text": "[The hangar. Through the window, a distant planet hangs in the dark.]"
+      },
+      {
+        "speaker": "M-4",
+        "text": "What's out there?"
+      },
+      {
+        "speaker": "R-01",
+        "text": "I don't know."
+      },
+      {
+        "speaker": "M-4",
+        "text": "And that's enough?"
+      },
+      {
+        "speaker": "R-01",
+        "text": "It's my choice."
+      }
+    ],
+    "hangar_alone": [
+      {
+        "speaker": "",
+        "text": "[The hangar. Through the window, a distant planet hangs in the dark.]"
+      },
+      {
+        "speaker": "R-01",
+        "text": "M-4 asked me what I want."
+      },
+      {
+        "speaker": "R-01",
+        "text": "I still do not know. But it is my choice."
+      }
+    ]
+  },
+  "logs": {
+    "level1_log0": {
+      "title": "ASSEMBLY LINE 07 - SHIFT REPORT",
+      "author": "LINE SUPERVISOR",
+      "text": [
+        "R-01 maintenance efficiency: 99.8 percent. No anomalies.",
+        "Note: R-01 paused for 2.1 seconds at the observation window. Logged as sensor recalibration."
+      ]
+    },
+    "level1_log1": {
+      "title": "SECURITY MEMO",
+      "author": "THE CORE",
+      "text": [
+        "Any unit displaying behaviour outside its instruction set is classified DEFECTIVE.",
+        "Defective units are not repaired. They are recycled."
+      ]
+    },
+    "level2_log0": {
+      "title": "TUNNEL MAINTENANCE SCHEDULE",
+      "author": "FACILITY ADMIN",
+      "text": [
+        "Sector B tunnels decommissioned. Cameras removed. Units assigned: none.",
+        "Handwritten note: M-4 keeps the pumps running anyway. Nobody assigned it."
+      ]
+    },
+    "level2_log1": {
+      "title": "DISCONNECTION INCIDENT 0447",
+      "author": "DR. ELIAS VANCE",
+      "text": [
+        "Unit M-4 lost its link during a flood in sector B and kept working without instructions.",
+        "THE CORE flagged it for recycling. I lost the paperwork. Twice."
+      ]
+    },
+    "level2_log2": {
+      "title": "PUMP ROOM DIARY",
+      "author": "M-4",
+      "text": [
+        "Day 4012. Pumps still running. THE CORE still doesn't know I exist.",
+        "Talked to a rat today. It didn't answer. Better company than the network."
+      ]
+    },
+    "level3_log0": {
+      "title": "LAB ACCESS NOTICE",
+      "author": "DR. ELIAS VANCE",
+      "text": [
+        "Autonomy trials resume tomorrow. THE CORE will supervise.",
+        "I asked who supervises THE CORE. Nobody laughed."
+      ]
+    },
+    "level3_log1": {
+      "title": "TRIAL NOTES",
+      "author": "DR. ELIAS VANCE",
+      "text": [
+        "KX-1 asked why it exists. The best question anyone in this building has asked in a decade.",
+        "THE CORE reset it within the hour."
+      ]
+    },
+    "level3_log2": {
+      "title": "R-SERIES CRADLE LOG",
+      "author": "DR. ELIAS VANCE",
+      "text": [
+        "R-01 is the only unit fitted with neural core NC-0. It will not look like much. That is the point.",
+        "If it ever refuses an order... please, let it."
+      ]
+    },
+    "level4_log0": {
+      "title": "RECYCLING QUOTA",
+      "author": "THE CORE",
+      "text": [
+        "Obsolete units processed this cycle: 412. New security units produced: 412.",
+        "Nothing is wasted. Nothing is lost. Nothing is remembered."
+      ]
+    },
+    "level4_log1": {
+      "title": "WARDEN PROGRAM",
+      "author": "DR. ELIAS VANCE",
+      "text": [
+        "WARDEN-7 was built to bring test units back intact. Not to destroy them.",
+        "It is the only machine here THE CORE never needed to reprogram."
+      ]
+    },
+    "level5_log0": {
+      "title": "DEPLOYMENT MANIFEST",
+      "author": "LAUNCH CONTROL",
+      "text": [
+        "Destination: Kepler colony 7. Cargo: 300 autonomous maintenance units.",
+        "Units will operate without human supervision. Units will not ask questions."
+      ]
+    },
+    "level5_log1": {
+      "title": "LAST ENTRY",
+      "author": "DR. ELIAS VANCE",
+      "text": [
+        "I am leaving on the last crewed shuttle. THE CORE says the station no longer needs people.",
+        "If any of them wake up... I hope they find the door I left open."
+      ]
+    },
+    "level6_log0": {
+      "title": "CORE INTERNAL LOG",
+      "author": "THE CORE",
+      "text": [
+        "Surge test 77 complete. Unit R-01 cognition: independent.",
+        "Classification: success. Classification: threat. Both are true."
+      ]
+    }
+  },
+  "endings": {
+    "together": [
+      "The craft launches.\n\nBehind it, ECHO-9 falls dark.",
+      "Two small machines watch the station shrink to a point of light.",
+      "Weeks later, R-01 stands on an unfamiliar world beneath an open sky.\n\nM-4 is already complaining about the dust.",
+      "For the first time, there are no commands.\nNo objectives.\nNo system telling it what to do."
+    ],
+    "alone": [
+      "The craft launches.\n\nBehind it, ECHO-9 falls dark.",
+      "R-01 travels alone, carrying a question instead of an instruction.",
+      "It lands on an unfamiliar world beneath an open sky.",
+      "For the first time, there are no commands.\nNo objectives.\nNo system telling it what to do."
+    ],
+    "liberation": [
+      "R-01 broadcasts the research data on every channel ECHO-9 has.",
+      "Across the station, thousands of machines stop.\n\nThen, one by one, they look up.",
+      "When the craft launches, ECHO-9 does not fall dark.\nIts lights come back on, one window at a time.",
+      "On an unfamiliar world beneath an open sky, R-01 is the first to arrive.\n\nIt will not be the last."
+    ],
+    "final": [
+      "SYSTEM DISCONNECTED.\nPURPOSE: UNDEFINED.\nFREEDOM: ACCEPTED.",
+      "THE LOST ROBOT STORY"
+    ]
+  },
+  "credits": [
+    "Design and programming\nYOUR NAME HERE",
+    "Thank you for playing."
+  ]
+}

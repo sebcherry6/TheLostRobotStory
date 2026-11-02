@@ -197,8 +197,8 @@ namespace TheLostRobotStory.Systems
 
             if (_timer >= animation.FrameTime)
             {
-
-                _timer = 0;
+                // keep the remainder so frames advance evenly
+                _timer -= animation.FrameTime;
 
 
                 _currentFrame++;
@@ -270,6 +270,18 @@ namespace TheLostRobotStory.Systems
 
 
         // =====================================================
+        // play from the first frame even if it is already playing
+        public void Restart(string name)
+        {
+            if (!_animations.ContainsKey(name))
+                return;
+
+            _currentAnimation = name;
+            _currentFrame = 0;
+            _timer = 0;
+            _finished = false;
+        }
+
         // RESET
         // =====================================================
 

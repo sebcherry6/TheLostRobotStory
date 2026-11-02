@@ -94,7 +94,8 @@ namespace TheLostRobotStory.World
 
             Bounds =
                 new Rectangle(
-                    (int)position.X,
+                    (int)position.X + 8,   // centred in its tile
+
                     (int)position.Y,
                     Width,
                     Height);
@@ -217,7 +218,7 @@ namespace TheLostRobotStory.World
             if (IsActive)
             {
 
-                if (player.Bounds.Intersects(Bounds))
+                if (PixelCollision.Overlaps(player.GetShape(), GetShape()))
                 {
 
                     if (_damageTimer <= 0)
@@ -254,9 +255,25 @@ namespace TheLostRobotStory.World
         // DRAW
         // =====================================================
 
+        // only the beam itself hurts (frame 1 of laser.png)
+        public SpriteShape GetShape()
+        {
+            if (TextureManager.Laser == null)
+                return SpriteShape.FromRect(Bounds);
+
+            return SpriteShape.FromTexture(TextureManager.Laser, Sprites.FrameRect(TextureManager.Laser, 1, 16), Bounds);
+        }
+
         public void Draw(
             SpriteBatch spriteBatch)
         {
+            // laser.png: 2 frames of 16x96 -> 0 = off, 1 = on
+            if (TextureManager.Laser != null)
+            {
+                Sprites.DrawFrame(spriteBatch, TextureManager.Laser, Bounds, IsActive ? 1 : 0, Color.White, 16);
+                return;
+            }
+
 
 
             Color laserColor;

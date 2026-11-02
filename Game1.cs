@@ -1,769 +1,92 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
 using TheLostRobotStory.Core;
-using TheLostRobotStory.Entities;
+using TheLostRobotStory.Scenes;
+using TheLostRobotStory.Story;
 
 namespace TheLostRobotStory
 {
+    // Game1 is now only the "host": it loads shared resources and runs
+    // the scene stack. Gameplay code moved to Scenes/GameplayScene.cs.
     public class Game1 : Game
     {
+        public static readonly Color BackgroundColor = new Color(16, 18, 26);
 
-        private GraphicsDeviceManager _graphics;
-
+        private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        private InputManager _input;
+        private SceneManager _scenes;
 
-
-
-        // =====================================================
-        // CORE SYSTEMS
-        // =====================================================
-
-        private GameManager _gameManager;
-
-        private InputManager _inputManager;
-
-
-
-        private readonly List<Projectile> _projectiles =
-            new();
-
-
-
-        private readonly ParticleManager _particles =
-            new();
-
-
-
-
-
-        // =====================================================
-        // CAMERA
-        // =====================================================
-
-        private Camera _camera;
-
-        private float _shakeTimer;
-
-        private float _shakeMagnitude;
-
-        private Vector2 _shakeOffset;
-
-
-
-
-
-        // =====================================================
-        // UI
-        // =====================================================
-
-        private SpriteFont _uiFont;
-
-        private HUD _hud;
-
-
-
-        private string _messageText = "";
-
-        private float _messageTimer;
-
-
-
-
-
-
-        // =====================================================
-        // LEVEL TRANSITION
-        // =====================================================
-
-        private bool _isTransitioning;
-
-        private float _fade;
-
-        private bool _changingLevel;
-
-        private string _pendingLevel;
-
-        private const float FadeSpeed = 2.5f;
-
-
-
-
-
+        public GameSettings Settings { get; private set; } = new GameSettings();
 
         public Game1()
         {
+            _graphics = new GraphicsDeviceManager(this)
+            {
+                PreferredBackBufferWidth = 1280,
+                PreferredBackBufferHeight = 720
+            };
 
-            _graphics =
-                new GraphicsDeviceManager(this);
-
-
-            Content.RootDirectory =
-                "Content";
-
-
-            IsMouseVisible = true;
-
+            Content.RootDirectory = "Content";
+            IsMouseVisible = false;
         }
-
-
-
-
-
-
-
-        // =====================================================
-        // INITIALIZE
-        // =====================================================
 
         protected override void Initialize()
         {
-
-            _camera =
-                new Camera(
-                    GraphicsDevice.Viewport.Width,
-                    GraphicsDevice.Viewport.Height);
-
-
-
-            _inputManager =
-                new InputManager();
-
-
-
-            _gameManager =
-                new GameManager(
-                    _particles,
-                    _projectiles);
-
-
-
-
-
-            Boss.BossSlamEvent += () =>
-            {
-
-                StartShake(
-                    0.25f,
-                    6f);
-
-            };
-
-
-
+            Window.Title = "The Lost Robot Story";
+            _input = new InputManager();
             base.Initialize();
-
         }
-
-
-
-
-
-
-
-
-        // =====================================================
-        // LOAD CONTENT
-        // =====================================================
 
         protected override void LoadContent()
         {
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            _spriteBatch =
-                new SpriteBatch(
-                    GraphicsDevice);
+            TextureManager.Load(Content, GraphicsDevice);
+            AudioManager.Initialize(Content);
+            AudioManager.Preload();
+            StoryData.Load();
+            LevelDatabase.Load();
 
+            ApplySettings(SaveSystem.LoadSettings());
 
+            SpriteFont font = Content.Load<SpriteFont>("UIFont");
 
-
-
-            TextureManager.Load(
-                Content,
-                GraphicsDevice);
-
-
-
-
-
-            _uiFont =
-                Content.Load<SpriteFont>(
-                    "UIFont");
-
-
-
-            _hud =
-                new HUD(
-                    _uiFont);
-
-
-
-
-
-            _gameManager.LoadGame(
-                "level1.txt");
-
-
-
-
-
-            ShowMessage(
-                "A - Left\nD - Right\nSPACE - Jump\nJ - Attack",
-                5f);
-
+            _scenes = new SceneManager(this, font);
+            _scenes.Push(new MainMenuScene());
         }
 
-
-
-
-
-
-
-
-
-        // =====================================================
-        // UPDATE
-        // =====================================================
-
-        protected override void Update(
-    GameTime gameTime)
+        public void ApplySettings(GameSettings settings)
         {
-            float dt =
-                (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Settings = settings;
 
+            AudioManager.SetVolumes(settings.MusicVolume, settings.SfxVolume);
 
-
-            // ==============================
-            // INPUT
-            // ==============================
-
-            _inputManager.Update();
-
-
-
-            if (_inputManager.ExitPressed())
+            if (_graphics.IsFullScreen != settings.Fullscreen)
             {
-                Exit();
+                _graphics.IsFullScreen = settings.Fullscreen;
+                _graphics.ApplyChanges();
             }
-
-
-
-
-
-            // ==============================
-            // MESSAGE TIMER
-            // ==============================
-
-            if (_messageTimer > 0)
-            {
-                _messageTimer -= dt;
-
-
-                if (_messageTimer <= 0)
-                {
-                    _messageText = "";
-                }
-            }
-
-
-
-
-
-            // ==============================
-            // GAME UPDATE
-            // ==============================
-
-            _gameManager.Update(
-                gameTime,
-                _inputManager);
-
-
-
-
-
-            // ==============================
-            // LEVEL TRANSITION
-            // ==============================
-
-            if (_gameManager.ChangeLevelRequested &&
-                !_isTransitioning)
-            {
-
-                StartLevelTransition(
-                    _gameManager.NextLevel);
-
-
-                _gameManager.ClearLevelRequest();
-
-            }
-
-
-
-
-
-            if (_isTransitioning)
-            {
-
-                if (_changingLevel)
-                {
-
-                    _fade += FadeSpeed * dt;
-
-
-
-                    if (_fade >= 1f)
-                    {
-
-                        _fade = 1f;
-
-
-
-                        _gameManager.ChangeLevel(
-                            _pendingLevel);
-
-
-
-                        if (_gameManager.Player != null)
-                        {
-
-                            _camera.Reset(
-                                _gameManager.Player.position);
-
-                        }
-
-
-
-                        _changingLevel = false;
-
-                    }
-
-                }
-
-                else
-                {
-
-                    _fade -= FadeSpeed * dt;
-
-
-
-                    if (_fade <= 0f)
-                    {
-
-                        _fade = 0f;
-
-                        _isTransitioning = false;
-
-                    }
-
-                }
-
-            }
-
-
-
-
-
-
-
-            // ==============================
-            // CAMERA
-            // ==============================
-
-            if (_gameManager.Player != null)
-            {
-                _camera.Follow(
-                    _gameManager.Player.position,
-                    gameTime);
-            }
-
-
-
-
-
-
-            // ==============================
-            // PARTICLES
-            // ==============================
-
-            _particles.Update(
-                gameTime);
-
-
-
-
-
-            UpdateShake(
-                dt);
-
-
-
-
-            base.Update(
-                gameTime);
         }
 
-        // =====================================================
-        // DRAW
-        // =====================================================
-
-        protected override void Draw(
-            GameTime gameTime)
+        protected override void Update(GameTime gameTime)
         {
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            GraphicsDevice.Clear(
-                Color.CornflowerBlue);
+            _input.Update();
+            AudioManager.Update(dt);
+            _scenes.Update(gameTime, _input);
 
-
-
-
-
-            Matrix cameraMatrix =
-                _camera.GetViewMatrix()
-                *
-                Matrix.CreateTranslation(
-                    _shakeOffset.X,
-                    _shakeOffset.Y,
-                    0);
-
-
-
-
-
-
-            // =====================================================
-            // WORLD
-            // =====================================================
-
-            _spriteBatch.Begin(
-                transformMatrix:
-                cameraMatrix);
-
-
-
-
-
-            _gameManager.Draw(
-                _spriteBatch);
-
-
-
-
-
-            _particles.Draw(
-                _spriteBatch,
-                TextureManager.Pixel);
-
-
-
-
-
-
-
-            // =====================================================
-            // BOSS HEALTH BAR
-            // =====================================================
-
-            if (_gameManager.CurrentLevel != null)
-            {
-
-                foreach (var enemy in
-                    _gameManager.CurrentLevel._enemies)
-                {
-
-                    if (enemy is Boss boss)
-                    {
-
-                        float hp =
-                            MathHelper.Clamp(
-                                (float)boss.Health /
-                                boss.MaxHealth,
-                                0,
-                                1);
-
-
-
-
-
-                        Rectangle back =
-                            new Rectangle(
-                                boss.Bounds.Center.X - 50,
-                                boss.Bounds.Top - 20,
-                                100,
-                                8);
-
-
-
-
-                        Rectangle front =
-                            new Rectangle(
-                                boss.Bounds.Center.X - 50,
-                                boss.Bounds.Top - 20,
-                                (int)(100 * hp),
-                                8);
-
-
-
-
-
-
-                        _spriteBatch.Draw(
-                            TextureManager.Pixel,
-                            back,
-                            Color.DarkRed);
-
-
-
-
-
-                        _spriteBatch.Draw(
-                            TextureManager.Pixel,
-                            front,
-                            Color.LimeGreen);
-
-
-                    }
-
-                }
-
-            }
-
-
-
-
-
-
-            _spriteBatch.End();
-
-
-
-
-
-
-
-
-            // =====================================================
-            // UI
-            // =====================================================
-
-            _spriteBatch.Begin();
-
-
-
-
-
-            if (_gameManager.Player != null &&
-               _gameManager.CurrentLevel != null)
-            {
-
-                _hud.Draw(
-                    _spriteBatch,
-                    _gameManager.Player,
-                    _gameManager.CurrentLevel.CollectiblesRemaining,
-                    _gameManager.CurrentLevel.EnemiesRemaining);
-
-            }
-
-
-
-
-
-
-
-            // =====================================================
-            // MESSAGE POPUP
-            // =====================================================
-
-            if (_gameManager.ActiveDoor != null)
-            {
-                string text =
-                    _gameManager.ActiveDoor.CanOpen
-                    ?
-                    "Press E to enter"
-                    :
-                    "Door locked! Kill all the enemies\n and collect all the crystals to unlock!";
-
-
-
-                _spriteBatch.DrawString(
-                    _uiFont,
-                    text,
-                    new Vector2(300, 150),
-                    Color.White);
-            }
-
-            if (!string.IsNullOrEmpty(_messageText))
-            {
-
-                Vector2 size =
-                    _uiFont.MeasureString(
-                        _messageText);
-
-
-
-
-                _spriteBatch.DrawString(
-                    _uiFont,
-                    _messageText,
-                    new Vector2(
-                        (_graphics.PreferredBackBufferWidth / 2)
-                        - size.X / 2,
-                        80),
-                    Color.White);
-
-            }
-
-
-
-
-
-
-            _spriteBatch.End();
-
-
-
-
-
-
-
-            // =====================================================
-            // FADE
-            // =====================================================
-
-            _spriteBatch.Begin();
-
-
-
-
-            if (_fade > 0)
-            {
-
-                _spriteBatch.Draw(
-                    TextureManager.Pixel,
-                    new Rectangle(
-                        0,
-                        0,
-                        _graphics.PreferredBackBufferWidth,
-                        _graphics.PreferredBackBufferHeight),
-                    Color.Black *
-                    MathHelper.Clamp(
-                        _fade,
-                        0,
-                        1));
-
-            }
-
-
-
-
-
-            _spriteBatch.End();
-
-
-
-
-            base.Draw(
-                gameTime);
-
+            base.Update(gameTime);
         }
-        // =====================================================
-        // POPUP MESSAGE
-        // =====================================================
 
-        private void ShowMessage(
-            string message,
-            float duration)
+        protected override void Draw(GameTime gameTime)
         {
+            GraphicsDevice.Clear(BackgroundColor);
 
-            _messageText =
-                message;
+            _scenes.Draw(_spriteBatch);
 
-
-            _messageTimer =
-                duration;
-
+            base.Draw(gameTime);
         }
-
-
-
-        private void StartLevelTransition(string nextLevel)
-        {
-            if (_isTransitioning)
-                return;
-
-
-            _isTransitioning = true;
-
-            _changingLevel = true;
-
-            _pendingLevel = nextLevel;
-
-            _fade = 0f;
-        }
-
-
-
-        // =====================================================
-        // CAMERA SHAKE
-        // =====================================================
-
-        private void StartShake(
-            float duration,
-            float magnitude)
-        {
-
-            _shakeTimer =
-                duration;
-
-
-            _shakeMagnitude =
-                magnitude;
-
-        }
-
-
-
-
-
-
-
-        private void UpdateShake(
-            float dt)
-        {
-
-            if (_shakeTimer > 0)
-            {
-
-                _shakeTimer -= dt;
-
-
-
-
-                _shakeOffset =
-                    new Vector2(
-
-                        (float)
-                        (Random.Shared.NextDouble() * 2 - 1)
-                        *
-                        _shakeMagnitude,
-
-
-                        (float)
-                        (Random.Shared.NextDouble() * 2 - 1)
-                        *
-                        _shakeMagnitude
-
-                    );
-
-            }
-            else
-            {
-
-                _shakeOffset =
-                    Vector2.Zero;
-
-            }
-
-        }
-
     }
 }

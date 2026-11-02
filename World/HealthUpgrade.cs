@@ -111,6 +111,12 @@ namespace TheLostRobotStory.World
             if (IsCollected)
                 return;
 
+            if (TextureManager.HealthUpgrade != null)
+            {
+                Sprites.Draw(spriteBatch, TextureManager.HealthUpgrade, Bounds, Color.White, frameWidth: 24, fps: 6f);
+                return;
+            }
+
 
 
             // Glow

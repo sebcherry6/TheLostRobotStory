@@ -210,6 +210,14 @@ namespace TheLostRobotStory.Core
 
 
 
+        // move toward a world point (used by story moments)
+        public void Focus(Vector2 targetPosition, float dt, float speed = 3f)
+        {
+            Vector2 target = targetPosition - new Vector2(_screenSize.X / 2, _screenSize.Y / 2);
+            Position = Vector2.Lerp(Position, -target, MathHelper.Clamp(speed * dt, 0f, 1f));
+            ClampToWorld();
+        }
+
         public void SetZoom(
             float zoom)
         {
@@ -236,8 +244,8 @@ namespace TheLostRobotStory.Core
             return
                 Matrix.CreateTranslation(
                     new Vector3(
-                        Position +
-                        _shakeOffset,
+                        (float)System.Math.Round(Position.X + _shakeOffset.X),
+                        (float)System.Math.Round(Position.Y + _shakeOffset.Y),
                         0))
                 *
                 Matrix.CreateScale(

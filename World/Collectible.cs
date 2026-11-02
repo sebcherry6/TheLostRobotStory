@@ -193,6 +193,12 @@ namespace TheLostRobotStory.World
             if (IsCollected)
                 return;
 
+            if (TextureManager.Crystal != null)
+            {
+                Sprites.Draw(spriteBatch, TextureManager.Crystal, Bounds, Color.White, frameWidth: 16, fps: 6f, timeOffset: Position.X * 0.01f);
+                return;
+            }
+
 
 
             Color color =

@@ -1,0 +1,152 @@
+{
+  "firstLevel": "level1.txt",
+  "levels": [
+    {
+      "file": "level1.txt",
+      "id": "level1",
+      "title": "Area 1 - Assembly Line 07",
+      "next": "level2.txt",
+      "music": "level1",
+      "chapter": "PROLOGUE",
+      "chapterTitle": "THE AWAKENING",
+      "goal": "Escape Assembly Line 07.",
+      "coreStage": 1,
+      "escapeSeconds": 150,
+      "requires": {},
+      "background": "#14161F",
+      "tileColor": "#5E6372",
+      "hazardColor": "#32CD32",
+      "triggers": {
+        "1": [
+          "ambush:EEE"
+        ],
+        "2": [
+          "alarm",
+          "escape"
+        ]
+      }
+    },
+    {
+      "file": "level2.txt",
+      "id": "level2",
+      "title": "Area 2 - Maintenance Tunnels",
+      "next": "level3.txt",
+      "music": "level2",
+      "chapter": "CHAPTER 2",
+      "chapterTitle": "BELOW THE SURFACE",
+      "goal": "Find a way into the research division.",
+      "requires": {
+        "switches": true,
+        "meetM4": true
+      },
+      "switchLabel": "Restore elevator power",
+      "background": "#0B110F",
+      "tileColor": "#4A5550",
+      "hazardColor": "#7CFC00",
+      "triggers": {
+        "2": [
+          "warden"
+        ],
+        "3": [
+          "ambush:EFSE"
+        ]
+      }
+    },
+    {
+      "file": "level3.txt",
+      "id": "level3",
+      "title": "Area 3 - Research Laboratory",
+      "next": "level4.txt",
+      "music": "level3",
+      "chapter": "CHAPTER 3",
+      "chapterTitle": "THE EXPERIMENTS",
+      "goal": "Recover the research records. Learn what you are.",
+      "coreStage": 3,
+      "boss": "guardian",
+      "requires": {
+        "fragments": 3,
+        "boss": true
+      },
+      "background": "#121620",
+      "tileColor": "#7A8496",
+      "hazardColor": "#40E0D0",
+      "triggers": {
+        "2": [
+          "ambush:KEF"
+        ]
+      }
+    },
+    {
+      "file": "level4.txt",
+      "id": "level4",
+      "title": "Area 4 - The Furnace",
+      "next": "level5.txt",
+      "music": "level4",
+      "chapter": "CHAPTER 4",
+      "chapterTitle": "THE FURNACE",
+      "goal": "Shut down the recycling plant and get through it.",
+      "boss": "warden",
+      "bossDropStage": 4,
+      "bossDropHealth": true,
+      "requires": {
+        "switches": true
+      },
+      "switchLabel": "Shut down recycling machinery",
+      "switchesStopMachines": true,
+      "background": "#1E120C",
+      "tileColor": "#6E5A4E",
+      "hazardColor": "#FF5A1E",
+      "triggers": {
+        "1": [
+          "m4:capture"
+        ],
+        "2": [
+          "ambush:KFSE"
+        ]
+      }
+    },
+    {
+      "file": "level5.txt",
+      "id": "level5",
+      "title": "Area 5 - Departure Bay",
+      "next": "level6.txt",
+      "music": "level5",
+      "chapter": "CHAPTER 5",
+      "chapterTitle": "THE DEPARTURE BAY",
+      "goal": "Break the lockdown. Reach the central control chamber.",
+      "coreStage": 4,
+      "requires": {
+        "relays": true
+      },
+      "relayLabel": "Destroy power relays",
+      "startActions": [
+        "alarm"
+      ],
+      "background": "#0E1424",
+      "tileColor": "#5A6680",
+      "hazardColor": "#32CD32",
+      "triggers": {
+        "2": [
+          "ambush:EFKS"
+        ]
+      }
+    },
+    {
+      "file": "level6.txt",
+      "id": "level6",
+      "title": "Area 6 - Core Chamber",
+      "next": "",
+      "music": "level6",
+      "chapter": "FINAL CHAPTER",
+      "chapterTitle": "THE LOST ROBOT",
+      "goal": "Face THE CORE.",
+      "boss": "core",
+      "requires": {
+        "boss": true
+      },
+      "background": "#0A0A10",
+      "tileColor": "#3C3C50",
+      "hazardColor": "#FF2040"
+    }
+  ]
+}
